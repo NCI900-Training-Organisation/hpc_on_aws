@@ -30,12 +30,12 @@ and access key ``7************************4``.
 Sample configuration
 ---------------------
 
-
 The set of files used to describe infrastructure in Terraform is known as a Terraform configuration. 
 You will write your first configuration to define a single AWS EC2 instance.
 
 
 .. important::
+
     Each Terraform configuration must be in its own working directory. 
 
 .. code-block:: hcl
@@ -140,3 +140,113 @@ of the output to save space.
     :linenos:
 
     terraform apply
+
+
+Inspect state
+----------------
+
+Terraform writes ist data into a file called ``terraform.tfstate``. Terraform stores the IDs and 
+properties of the resources it manages in this file, so that it can update or destroy those 
+resources going forward.
+
+
+.. code-block:: bash
+    :linenos:
+
+    terraform show
+
+When Terraform created this EC2 instance, it also gathered the resource's metadata from the AWS 
+provider and wrote the metadata to the state file. 
+
+List all the resources using
+
+.. code-block:: bash
+    :linenos:
+    
+    terraform state list
+
+
+Changing configuration
+-------------------------
+
+You can change the configuration. For instance you can change the AMI. When you do this the old
+instance is deleted and a new one created. You can the apply the changes using
+
+.. code-block:: bash
+    :linenos:
+    
+    terraform apply
+
+
+* ``-/+`` in the outputs  means that Terraform will destroy and recreate the resource, rather than updating it in-place.
+* ``~`` indicates that the resources are updated in-place. 
+
+Destroy resources
+---------------------
+
+
+The ``terraform destroy`` command terminates resources managed by your Terraform project. 
+This command is the inverse of terraform apply in that it terminates all the resources specified in 
+your Terraform state. 
+
+.. important::
+
+    It does not destroy resources running elsewhere that are not managed by the current Terraform project.
+
+Configuration variables
+--------------------------
+
+Terraform variables allow you to write configuration that is flexible and easier to re-use.
+
+Here we are creating a file called ``variable.tf`` that has following code.
+
+.. code-block:: bash
+    :linenos:
+
+    variable "instance_name" {
+        description = "Value of the Name tag for the EC2 instance"
+        type        = string
+        default     = "ExampleAppServerInstance"
+    }
+
+The ``instance_name`` variable block will default to its default value unless you declare a different value.
+
+.. important::
+    
+    Terraform loads all files in the current directory ending in .tf, so you can name your configuration files however you choose.
+
+``main.tf`` is changes to:
+
+.. code-block:: bash
+    :linenos:
+
+    tags = {
+        Name = var.instance_name
+    }
+
+Now apply the configuration again, this time overriding the default instance name by passing in a 
+variable using the ``-var`` flag. Terraform will update the instance's Name tag with the new name.
+
+
+.. code-block:: bash
+    :linenos:
+
+    apply -var "instance_name=TestInstance"
+
+
+Assign values with a file
+--------------------
+
+Entering variable values manually is time consuming and error prone. Instead, you can capture variable 
+values in a file.
+
+Create a file named ``varfile.tfvars`` with the following contents.
+
+.. code-block:: bash
+    :linenos:
+
+    instance_name = "PersistantValues"
+
+
+Terraform automatically loads all files in the current directory with the exact name ``terraform.tfvars``.
+You can also use the ``-var-file`` flag to specify other files by name.

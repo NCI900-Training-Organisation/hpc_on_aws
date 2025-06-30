@@ -10,12 +10,15 @@ Make sure you have an IAM access key and configure AWS.
 .. code-block:: bash
     :linenos:
 
-    aws configure
+    aws configure --profile terraform-user
 
     AWS Access Key ID [None]: A*********************T
     AWS Secret Access Key [None]: 7************************4             
     Default region name [None]: us-east-1
     Default output format [None]: yaml
+
+Where ``terraform-user`` is the IAM user you have created, with the access key id ``A*********************T``
+and access key ``7************************4``.  
 
 .. code-block:: bash
     :linenos:
@@ -24,6 +27,9 @@ Make sure you have an IAM access key and configure AWS.
     aws sts get-caller-identity
 
  
+Sample configuration
+---------------------
+
 
 The set of files used to describe infrastructure in Terraform is known as a Terraform configuration. 
 You will write your first configuration to define a single AWS EC2 instance.
@@ -31,10 +37,6 @@ You will write your first configuration to define a single AWS EC2 instance.
 
 .. important::
     Each Terraform configuration must be in its own working directory. 
-
-
-Sample configuration
----------------------
 
 .. code-block:: hcl
     :linenos:

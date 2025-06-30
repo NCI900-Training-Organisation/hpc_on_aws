@@ -12,10 +12,4 @@ Contents
 
 .. toctree::
 
-   prerequisite
-   outcomes
-   modules
-   packages
-   are_errors.rst
-   tutorial
-   references
+   initial_setup.rst

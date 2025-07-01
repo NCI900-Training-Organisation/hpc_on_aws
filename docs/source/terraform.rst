@@ -308,3 +308,67 @@ Use the tutorial given below:
 
 https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-login
 
+
+.. important::
+
+    The variables in variable set should be set as environment variable and not terrform variable.
+
+.. important::
+
+    provider "aws" {} should not have user details.
+
+    https://discuss.hashicorp.com/t/error-configuring-terraform-aws-provider-failed-to-get-shared-config-profile/45500/4
+
+
+
+.. important::
+
+    * You can pass per-run variables to HCP Terraform using command line flags. 
+    * When using the CLI-driven workflow for HCP Terraform, any variables passed using the -var flag will override workspace-specific variables. 
+    * However, HCP Terraform will not save the new value in your workspace unless you update the variable in the UI.
+
+
+
+GitHub integration
+--------------------
+
+.. admonition:: Explanation
+   :class: attention
+
+    This is to be completed
+
+    https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/cloud-vcs-change
+
+
+Enforce a policy
+---------------------
+
+.. admonition:: Explanation
+   :class: attention
+
+   https://developer.hashicorp.com/terraform/tutorials/cloud-get-started/policy-quickstart
+
+Destroy infrastructure
+---------------------
+
+.. code-block:: bash
+    :linenos:
+
+    terraform plan -destroy -out=destroy.tfplan
+    terraform apply destroy.tfplan
+
+
+Add SSH key to terraform
+--------------------------
+
+.. code-block:: bash
+
+    resource "aws_key_pair" "hcp_key" {
+      key_name   = "terraform-user"
+      public_key = file("~/.ssh/terraform-user.pub")
+    }
+
+.. admonition:: Explanation
+   :class: attention
+
+   keys available in NCI onepass account

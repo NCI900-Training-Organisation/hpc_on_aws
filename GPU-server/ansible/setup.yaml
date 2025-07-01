@@ -59,6 +59,25 @@
         - hostvars[inventory_hostname].nvidia_gpu_check.rc == 0
 
 
+- name: Set ownership of /apps to the current user
+  hosts: ec2
+  become: yes
+  gather_facts: yes  # needed to resolve ansible_user
+
+  tasks:
+    - name: Set recursive ownership of /apps
+      file:
+        path: /apps
+        state: directory
+        recurse: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      when:
+        - ansible_distribution == "Ubuntu"
+        - ansible_distribution_version == "22.04"
+        - hostvars[inventory_hostname].intel_cpu_check.rc == 0
+        - hostvars[inventory_hostname].nvidia_gpu_check.rc == 0
+        
 - name: Create CUDA user group and users
   hosts: ec2
   become: yes

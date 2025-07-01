@@ -229,6 +229,77 @@
         msg: "Number of GPUs after MIG creation: {{ gpu_list_after.stdout_lines | length }}"
 
 
+- name: Setup spackadmin group and users with sudo and /apps permissions
+  hosts: ec2
+  become: yes
+  gather_facts: yes
+
+  vars:
+    spack_group: spackadmin
+    spack_user: spackuser
+    spack_dir: /apps
+    user_password: "nci@Kambri"
+    current_user: "{{ ansible_env.USER }}"
+
+  tasks:
+    - name: Create group "{{ spack_group }}"
+      group:
+        name: "{{ spack_group }}"
+        state: present
+
+    - name: Create user "{{ spack_user }}" with password and add to "{{ spack_group }}"
+      user:
+        name: "{{ spack_user }}"
+        groups: "{{ spack_group }}"
+        append: yes
+        password: "{{ user_password | password_hash('sha512') }}"
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Add current user "{{ current_user }}" to "{{ spack_group }}"
+      user:
+        name: "{{ current_user }}"
+        groups: "{{ spack_group }}"
+        append: yes
+
+    - name: Give "{{ spack_group }}" sudo privileges without password
+      copy:
+        dest: "/etc/sudoers.d/{{ spack_group }}"
+        content: "{{ spack_group }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: '0440'
+
+    - name: Change ownership of "{{ spack_dir }}" to root:"{{ spack_group }}"
+      file:
+        path: "{{ spack_dir }}"
+        state: directory
+        recurse: yes
+        owner: root
+        group: "{{ spack_group }}"
+
+    - name: Set group read/write/execute permissions on "{{ spack_dir }}"
+      file:
+        path: "{{ spack_dir }}"
+        recurse: yes
+        mode: "g+rwX"
+
+    - name: Set setgid bit on directories inside "{{ spack_dir }}"
+      command: find "{{ spack_dir }}" -type d -exec chmod g+s {} \;
+
+    - name: Ensure group sticky bit set on "{{ spack_dir }}"
+      file:
+        path: "{{ spack_dir }}"
+        mode: "g+s"
+
+    - name: Set others read and execute permissions on "{{ spack_dir }}"
+      file:
+        path: "{{ spack_dir }}"
+        recurse: yes
+        mode: "o=rx"
+
+
 - name: Create CUDA user group and users
   hosts: ec2
   become: yes

@@ -13,3 +13,5 @@ Contents
 .. toctree::
 
    initial_setup.rst
+   terraform.rst
+   ansible.rst

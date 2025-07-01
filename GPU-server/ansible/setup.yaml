@@ -23,6 +23,31 @@
       failed_when: nvidia_gpu_check.rc != 0
 
 
+- name: Install required system packages
+  hosts: ec2
+  become: yes
+  gather_facts: yes
+
+  vars:
+    required_packages:
+      - acl
+      - build-essential
+      - curl
+      - git
+      - wget
+      - htop
+
+  tasks:
+    - name: Force apt update
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name: "{{ required_packages }}"
+        state: present
+
+
 - name: Install Spack into /apps/spack
   hosts: ec2
   become: yes
@@ -300,15 +325,14 @@
         mode: "o=rx"
 
 
-- name: Create CUDA user group and users
+- name: Create CUDA user group and 30 users
   hosts: ec2
   become: yes
   gather_facts: no
   vars:
-    users_to_add:
-      - user1
-      - user
-    default_password: "cudauser"  # change this to a secure password
+    user_count: 30
+    default_password: "nciuser"  # password for all users
+    user_prefix: "user"
 
   tasks:
     - name: Create supergroup 'cudauser'
@@ -316,22 +340,44 @@
         name: cudauser
         state: present
       when:
-        - hostvars[inventory_hostname].ansible_distribution == "Ubuntu"
-        - hostvars[inventory_hostname].ansible_distribution_version == "22.04"
-        - hostvars[inventory_hostname].intel_cpu_check.rc == 0
-        - hostvars[inventory_hostname].nvidia_gpu_check.rc == 0
+        - ansible_distribution == "Ubuntu"
+        - ansible_distribution_version == "22.04"
+        - intel_cpu_check.rc == 0
+        - nvidia_gpu_check.rc == 0
 
-    - name: Create users and add to cudauser group
+    - name: Create 30 users and add to cudauser group
       user:
-        name: "{{ item }}"
+        name: "{{ user_prefix }}{{ item }}"
         groups: cudauser
         append: yes
         password: "{{ default_password | password_hash('sha512') }}"
         shell: /bin/bash
         state: present
-      loop: "{{ users_to_add }}"
+      loop: "{{ query('sequence', 'start=1 end=' + user_count|string) }}"
       when:
-        - hostvars[inventory_hostname].ansible_distribution == "Ubuntu"
-        - hostvars[inventory_hostname].ansible_distribution_version == "22.04"
-        - hostvars[inventory_hostname].intel_cpu_check.rc == 0
-        - hostvars[inventory_hostname].nvidia_gpu_check.rc == 0
+        - ansible_distribution == "Ubuntu"
+        - ansible_distribution_version == "22.04"
+        - intel_cpu_check.rc == 0
+        - nvidia_gpu_check.rc == 0
+
+
+- name: Grant ACL-based permissions to cudauser group on /apps
+  hosts: ec2
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Ensure ACL package is installed
+      apt:
+        name: acl
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Grant read and execute (rx) permissions recursively to group cudauser
+      command: setfacl -R -m g:cudauser:rx /apps
+
+    - name: Set default ACL for new files/folders in /apps for group cudauser
+      command: setfacl -R -d -m g:cudauser:rx /apps
+
+

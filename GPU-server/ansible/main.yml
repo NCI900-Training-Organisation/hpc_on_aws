@@ -1,0 +1,9 @@
+---
+- import_playbook: validate_system.yml
+- import_playbook: install_packages.yml
+- import_playbook: install_spack.yml
+- import_playbook: setup_mig.yml
+- import_playbook: create_mig_instances.yml
+- import_playbook: setup_users.yml
+- import_playbook: setup_permissions.yml
+- import_playbook: install_cuda.yml

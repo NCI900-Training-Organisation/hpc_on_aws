@@ -7,3 +7,4 @@
 - import_playbook: setup_users.yml
 - import_playbook: setup_permissions.yml
 - import_playbook: install_cuda.yml
+- import_playbook: password_login.yml

@@ -16,11 +16,10 @@ resource "aws_key_pair" "hcp_key" {
 resource "aws_instance" "app_server" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
-  # Example: Ubuntu 22.04 LTS for x86_64 (HVM), SSD Volume Type
-  ami = "ami-020cba7c55df1f615"
+  ami = "ami-05ee60afff9d0a480"
 
-  # The EC2 instance type; t2.micro is eligible for the AWS free tier.
-  instance_type = "t2.micro"
+  # The EC2 instance type.
+  instance_type = "p4d.24xlarge"
 
   # Use the key pair created above for SSH access.
   key_name = aws_key_pair.hcp_key.key_name

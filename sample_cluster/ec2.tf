@@ -15,6 +15,6 @@ resource "aws_instance" "cluster" {
   associate_public_ip_address = true
 
   tags = {
-    Name = "gpu-ssh-server-${count.index}"
+    Name = "cluster-node-${count.index}"
   }
 }

@@ -18,11 +18,13 @@ if [ -z "$CLEANED_OUTPUT" ]; then
   exit 1
 fi
 
-# Write Ansible inventory file
+# Write Ansible inventory file with aliases
 echo "[ec2]" > host.ini
+count=1
 while IFS= read -r ip; do
-  echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/terraform-user" >> host.ini
+  echo "node${count} ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/terraform-user" >> host.ini
+  ((count++))
 done <<< "$CLEANED_OUTPUT"
 
-echo "Ansible inventory 'host.ini' created with the following IPs:"
-echo "$CLEANED_OUTPUT"
+echo "Ansible inventory 'host.ini' created with the following hosts and IPs:"
+cat host.ini

@@ -1,5 +1,5 @@
 ---
-- name: Distribute slurm.conf to all nodes
+- name: Distribute slurm.conf and prepare Slurm directories on all nodes
   hosts: all
   become: true
   tasks:
@@ -19,3 +19,19 @@
         owner: root
         group: root
         mode: '0644'
+
+    - name: Create Slurm state save directory
+      file:
+        path: /var/spool/slurm
+        state: directory
+        owner: slurm
+        group: slurm
+        mode: '0700'
+
+    - name: Ensure slurmd spool directory exists
+      file:
+        path: /var/spool/slurmd
+        state: directory
+        owner: slurm
+        group: slurm
+        mode: '0700'

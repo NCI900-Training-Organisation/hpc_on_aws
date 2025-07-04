@@ -1,0 +1,21 @@
+---
+- name: Distribute slurm.conf to all nodes
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Ensure /etc/slurm directory exists
+      file:
+        path: /etc/slurm
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy slurm.conf to all nodes
+      copy:
+        src: slurm_config/slurm.conf
+        dest: /etc/slurm/slurm.conf
+        owner: root
+        group: root
+        mode: '0644'

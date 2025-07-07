@@ -47,6 +47,10 @@ resource "aws_subnet" "public" {
   # Required for them to be reachable from the internet
   map_public_ip_on_launch = true
 
+  # Specify the Availability Zone for this subnet
+  # This should match the AZ of your Capacity Reservation if used
+  availability_zone = var.target_az
+
   # Tag for easier identification in the console
   tags = {
     Name = "GPU-Server-public-subnet"

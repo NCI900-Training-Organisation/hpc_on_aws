@@ -102,8 +102,6 @@
       when:
         - ansible_distribution == "Ubuntu"
         - ansible_distribution_version == "22.04"
-        - intel_cpu_check.rc == 0
-        - nvidia_gpu_check.rc == 0
 
     # Create users user1 to user30 and add them to the cudauser group
     - name: Create 30 users and add to cudauser group
@@ -118,5 +116,3 @@
       when:
         - ansible_distribution == "Ubuntu"
         - ansible_distribution_version == "22.04"
-        - intel_cpu_check.rc == 0
-        - nvidia_gpu_check.rc == 0

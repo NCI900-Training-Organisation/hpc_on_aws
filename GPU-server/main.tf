@@ -6,10 +6,10 @@ terraform {
   required_providers {
     aws = {
       # The AWS provider comes from the official HashiCorp registry
-      source  = "hashicorp/aws"
-      
+      source = "hashicorp/aws"
+
       # Use version 4.16 or any compatible newer patch version (e.g., 4.16.x)
-      version = "~> 4.16"
+      version = ">= 5.0"
     }
   }
 

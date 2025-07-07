@@ -1,18 +1,32 @@
 #!/bin/bash
 
-# Fetch the public IP from Terraform output
-PUBLIC_IP=$(terraform output -raw instance_public_ip)
-
-# Check if the IP was retrieved successfully
-if [[ -z "$PUBLIC_IP" ]]; then
-  echo "Error: Failed to retrieve instance public IP from Terraform output."
+# Ensure script runs in bash
+if [ -z "$BASH_VERSION" ]; then
+  echo "Please run this script with bash: bash generate_host.sh"
   exit 1
 fi
 
-# Generate the Ansible inventory file
-cat <<EOF > host.ini
-[ec2]
-$PUBLIC_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/terraform-user
-EOF
+# Fetch the raw Terraform output
+RAW_OUTPUT=$(terraform -chdir=.. output instance_public_ip 2>/dev/null)
 
-echo "Ansible inventory 'host.ini' created with the EC2 instance IP: $PUBLIC_IP"
+# Clean and normalize: remove brackets, quotes, spaces, and blank lines
+CLEANED_OUTPUT=$(echo "$RAW_OUTPUT" | tr -d '[]" ' | tr ',' '\n' | sed '/^$/d')
+
+# Check if the cleaned output is empty
+if [ -z "$CLEANED_OUTPUT" ]; then
+  echo "Error: Failed to retrieve valid IPs from Terraform output."
+  exit 1
+fi
+
+# Write Ansible inventory file with aliases
+echo "[ec2]" > host.ini
+count=1
+while IFS= read -r ip; do
+  echo "node${count} ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/terraform-user" >> host.ini
+  ((count++))
+done <<< "$CLEANED_OUTPUT"
+
+echo "Ansible inventory 'host.ini' created with the following hosts and IPs:"
+cat host.ini
+
+

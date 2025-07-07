@@ -328,3 +328,15 @@ Add each user to the `cudausers` group to allow access:
    sudo usermod -aG cudausers user1
    sudo usermod -aG cudausers user2
    ...
+
+
+
+Paswsword Login
+---------------
+
+.. code-block:: bash
+   sudo grep -r 'PasswordAuthentication' /etc/ssh/sshd_config*
+   /etc/ssh/sshd_config:PasswordAuthentication yes
+   /etc/ssh/sshd_config:# PasswordAuthentication.  Depending on your PAM configuration,
+   /etc/ssh/sshd_config:# PAM authentication, then enable this but set PasswordAuthentication
+   /etc/ssh/sshd_config.d/60-cloudimg-settings.conf:PasswordAuthentication no

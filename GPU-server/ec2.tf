@@ -17,11 +17,11 @@ resource "aws_instance" "GpuTrainingServer" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
   #ami = "ami-05ee60afff9d0a480"  # Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.7 (Ubuntu 22.04) 20250602
-  ami = "ami-020cba7c55df1f615" # Example AMI ID for Ubuntu 22.04 LTS
+  ami = var.ami # Example AMI ID for Ubuntu 22.04 LTS
 
   # The EC2 instance type.
   #instance_type = "p4d.24xlarge" # Eight A100 GPUs, 96 vCPUs, 1152 GiB RAM
-  instance_type = "t2.micro" # 1 CPU
+  instance_type = var.instance_type # 1 CPU
 
   # Use the key pair created above for SSH access.
   key_name = aws_key_pair.hcp_key.key_name
@@ -41,6 +41,22 @@ resource "aws_instance" "GpuTrainingServer" {
   # Add tags to the instance for identification and management.
   tags = {
     Name = "NCI-GPU-Server" # Name tag appears in the EC2 console
+  }
+
+
+  # Configure root volume
+  root_block_device {
+    volume_type           = "gp3" # Use gp3 for improved performance and cost control
+    volume_size           = 300   # 300 GiB
+    iops                  = 3000  # Provisioned IOPS (default for gp3 is 3000)
+    encrypted             = false # Set to false for unencrypted volume (default is false)
+    delete_on_termination = true  # Deletes the volume when the instance is terminated
+  }
+
+
+  # Explicit market type
+  instance_market_options {
+    market_type = "capacity-block"
   }
 
   # Conditionally specify Capacity Reservation for this instance

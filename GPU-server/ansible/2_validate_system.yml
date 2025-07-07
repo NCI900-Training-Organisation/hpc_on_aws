@@ -16,10 +16,10 @@
 
     # Check if the CPU vendor is Intel
     - name: Check CPU is Intel
-      shell: lscpu | grep -i "Vendor ID" | grep -i GenuineIntel
-      register: intel_cpu_check
-      changed_when: false
-      failed_when: intel_cpu_check.rc != 0
+      assert:
+        that:
+          - "'GenuineIntel' in ansible_processor"
+        fail_msg: "This host is not using an Intel CPU"
 
     # Ensure that an NVIDIA GPU is available
     - name: Check NVIDIA GPU is present

@@ -22,9 +22,6 @@
       register: spack_list
       changed_when: false
 
-    - name: Output available packages
-      debug:
-        var: spack_list.stdout_lines
 
     # Discover compilers on the system
     - name: Detect installed compilers (spack compiler find)

@@ -79,3 +79,16 @@ variable "capacity_reservation_id" {
 }
 
 
+variable "target_az" {
+  description = "Availability Zone to use for resources (must match capacity reservation)"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "region" {
+  description = "Availability Zone to use for resources (must match capacity reservation)"
+  type        = string
+  default     = "us-east-1"
+}
+
+

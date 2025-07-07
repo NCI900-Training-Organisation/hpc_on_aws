@@ -27,9 +27,10 @@
       register: gpu_list
       changed_when: false
 
+
     - name: Set GPU count fact
       set_fact:
-        gpu_count: "{{ gpu_list.stdout_lines | length }}"
+        gpu_count: "{{ gpu_list.stdout_lines | length }}" 
 
     - name: Debug GPU count
       debug:
@@ -38,16 +39,15 @@
     # Enable MIG mode on each GPU
     - name: Enable MIG mode on each GPU
       shell: nvidia-smi -i {{ item }} -mig 1
-      loop: "{{ query('sequence', '0,' ~ (gpu_count - 1) ) }}"
+      with_sequence: start=0 end={{ gpu_count | int - 1 }}
       register: mig_enable_results
-      ignore_errors: yes
 
     - name: Report results of enabling MIG
       debug:
         var: mig_enable_results.results
 
     - name: Show current MIG status for all GPUs
-      shell: nvidia-smi -q -d MIG
+      shell: nvidia-smi -L
       register: mig_status
       changed_when: false
 

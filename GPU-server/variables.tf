@@ -85,10 +85,10 @@ variable "target_az" {
   default     = "us-east-1"
 }
 
-variable "region" {
-  description = "Availability Zone to use for resources (must match capacity reservation)"
+variable "aws_region" {
+  description = "The AWS region to deploy resources into"
   type        = string
-  default     = "us-east-1"
+  default     = "us-east-1" # Optional default
 }
 
 

@@ -34,7 +34,7 @@ terraform {
 provider "aws" {
   # Set the AWS region to use for all AWS resources
   # us-east-1 = N. Virginia
-  region = "us-east-1"
+  region = var.aws_region
 }
 
 

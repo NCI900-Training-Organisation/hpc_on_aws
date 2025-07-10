@@ -37,7 +37,10 @@ resource "aws_instance" "cluster" {
 
   # Attach one or more security groups to the instance.
   # This should include rules to allow SSH (port 22) access.
-  vpc_security_group_ids = [aws_security_group.ssh_access.id]
+  vpc_security_group_ids = [
+    aws_security_group.ssh_access.id,
+    aws_security_group.efs_sg.id,
+  ]
 
   # Ensure the instance gets a public IP address.
   # Required for SSH access from the internet.
@@ -45,7 +48,7 @@ resource "aws_instance" "cluster" {
 
   # Add tags to the instance for identification and management.
   tags = {
-    Name = "Slurm-Server" # Name tag appears in the EC2 console
+    Name = "Slurm-Server-${count.index + 1}" # Name tag appears in the EC2 console
   }
 
 

@@ -1,0 +1,36 @@
+
+
+resource "aws_efs_file_system" "apps" {
+  creation_token   = "apps-efs"
+  performance_mode = "generalPurpose"
+  throughput_mode  = "bursting"
+  tags = {
+    Name = "apps-efs"
+  }
+}
+
+resource "aws_efs_file_system" "scratch" {
+  creation_token   = "scratch-efs"
+  performance_mode = "generalPurpose"
+  throughput_mode  = "bursting"
+  tags = {
+    Name = "scratch-efs"
+  }
+}
+
+# Mount targets for all EFS in all subnets
+resource "aws_efs_mount_target" "efs_mount" {
+  count = length(local.efs_filesystems) * length(var.subnet_ids)
+
+  file_system_id  = element(values(local.efs_filesystems), count.index % length(local.efs_filesystems))
+  subnet_id       = var.subnet_ids[count.index / length(local.efs_filesystems)]
+  security_groups = [aws_security_group.efs_sg.id]
+}
+
+# Local variable mapping efs names to IDs
+locals {
+  efs_filesystems = {
+    apps    = aws_efs_file_system.apps.id
+    scratch = aws_efs_file_system.scratch.id
+  }
+}

@@ -1,0 +1,44 @@
+---
+- name: Mount /apps and /scratch EFS volumes on Ubuntu EC2 nodes
+  hosts: ec2
+  become: yes
+  vars:
+    efs_filesystems:
+      - id: "{{ efs_apps_id }}"
+        mount_point: "/apps"
+      - id: "{{ efs_scratch_id }}"
+        mount_point: "/scratch"
+
+  tasks:
+    - name: Ensure required tools are installed (amazon-efs-utils)
+      apt:
+        name: amazon-efs-utils
+        state: present
+        update_cache: yes
+
+    - name: Create mount directories
+      file:
+        path: "{{ item.mount_point }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ efs_filesystems }}"
+
+    - name: Mount EFS volumes
+      mount:
+        path: "{{ item.mount_point }}"
+        src: "{{ item.id }}:/"
+        fstype: efs
+        opts: defaults,_netdev
+        state: mounted
+      loop: "{{ efs_filesystems }}"
+
+    - name: Persist EFS mounts in /etc/fstab
+      mount:
+        path: "{{ item.mount_point }}"
+        src: "{{ item.id }}:/"
+        fstype: efs
+        opts: defaults,_netdev
+        state: present
+      loop: "{{ efs_filesystems }}"

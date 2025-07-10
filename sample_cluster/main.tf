@@ -1,11 +1,15 @@
 terraform {
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
+      # The AWS provider comes from the official HashiCorp registry
+      source = "hashicorp/aws"
+
+      # Use version 4.16 or any compatible newer patch version (e.g., 4.16.x)
+      version = ">= 5.0"
     }
   }
 
+  # Specify the minimum Terraform CLI version required
   required_version = ">= 1.2.0"
 
   cloud {

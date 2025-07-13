@@ -41,6 +41,7 @@ resource "aws_instance" "control_node" {
     aws_security_group.ssh_access.id, # Security group for SSH access
     aws_security_group.internal.id,   # Internal communication within the VPC
     aws_security_group.efs_sg.id,     # EFS access for file systems
+    aws_security_group.monitoring.id, # Monitoring access Prometheus, Grafana, etc.
   ]
 
   # Ensure the instance gets a public IP address.

@@ -37,3 +37,20 @@ ssh -i /home/joseph/.ssh/terraform-user \
   terraform output -json > tf_outputs.json
 
   aws efs describe-mount-targets --file-system-id fs-00076011c2d467488
+
+
+$ vim nciou.ldif
+
+dn: ou=Groups,dc=ncitraininf,dc=local
+objectClass: organizationalUnit
+ou: Groups
+
+dn: ou=nci_ou,dc=ncitraininf,dc=local
+objectClass: organizationalUnit
+ou: nci_ou
+
+$ sudo ldapadd -x -D "cn=admin,dc=ncitraininf,dc=local" -W -f nciou.ldif
+
+$ vim group_nciuser.ldif
+
+

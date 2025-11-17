@@ -1,8 +1,13 @@
-GPU Server in AWS
+HPC Cluster on AWS
 =================================================
 
-This repository provides an introduction to different concepts in Terraform and Ansible. It also details the terraform code and asnible playbook
-used to provision the NCI Training GOU server.
+
+
+This repository provides an introduction to key Terraform and Ansible concepts in the context 
+of HPC on AWS. It also includes the Terraform configurations and 
+Ansible playbooks used to provision an AWS-based HPC environment, including head nodes, compute
+nodes, shared storage, and supporting services.
+
 
 
 Contents
@@ -10,7 +15,12 @@ Contents
 
 .. toctree::
 
-   initial_setup.rst
-   terraform.rst
-   ansible.rst
-   pbs_cluster.rst
+   pbs-cluster/design.rst
+   pbs-cluster/cli.rst
+   pbs-cluster/vm_setup.rst
+   pbs-cluster/preparing.rst
+   pbs-cluster/ssh.rst
+   pbs-cluster/beegfs.rst
+   pbs-cluster/pbs.rst
+   pbs-cluster/ldap.rst
+   pbs-cluster/grafana.rst

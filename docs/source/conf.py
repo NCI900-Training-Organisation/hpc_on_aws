@@ -2,9 +2,9 @@
 
 # -- Project information
 
-project = "AWS Infrastructure"
-# copyright = "2024, National Computational Infrastructure"
-# author = "Name of the author"
+project = "HPC Cluster on AWS"
+copyright = "2025, National Computational Infrastructure"
+author = "Joseph John"
 
 release = "0.1"
 version = "0.1.0"

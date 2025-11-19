@@ -1,4 +1,4 @@
-LDAP Server
+LDAP 
 -------------
 
 Lightweight Directory Access Protocol (LDAP) is a protocol used for accessing and managing 

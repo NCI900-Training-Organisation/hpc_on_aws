@@ -134,7 +134,7 @@ Finally, reload the systemd daemon and start the Prometheus service:
 
 
 
-Installing Node Exporter
+Node Exporter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Node Exporter is a lightweight agent used with Prometheus to collect detailed hardware and 
@@ -216,7 +216,7 @@ Finally, reload the systemd daemon and start the Node Exporter service:
 
 
 
-Installing Grafana
+Grafana
 ~~~~~~~~~~~~~~~~~~~~~~
 
 To install Grafana, first, import the Grafana GPG key:

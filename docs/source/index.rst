@@ -24,3 +24,4 @@ Contents
    pbs-cluster/pbs.rst
    pbs-cluster/ldap.rst
    pbs-cluster/grafana.rst
+   references.rst

@@ -1,0 +1,18 @@
+---
+- import_playbook: 0_packages/0_master.yml
+  tags: packages
+
+- import_playbook: 1_setup_ssh/0_master.yml
+  tags: ssh
+
+- import_playbook: 2_setup_beegfs/0_master.yml
+  tags: beegfs
+
+- import_playbook: 3_setup_pbs/0_master.yml
+  tags: pbs
+
+- import_playbook: 4_ldap_server/0_master.yml
+  tags: ldap 
+
+- import_playbook: 5_prometheus_grafana/0_master.yml
+  tags: prometheus

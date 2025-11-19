@@ -204,11 +204,19 @@ different components by running the following commands from `pbs-cluster/ansible
 .. code-block:: bash
 
     ansible-playbook -i host.ini 0_packages/1_update_packages.yml
-    ansible-playbook -I host.ini 1_setup_ssh/0_master.yml
-    ansible-playbook -I host.ini 2_setup_beegfs/0_master.yml
-    ansible-playbook -I host.ini 3_setup_pbs/0_master.yml
-    ansible-playbook -I host.ini 4_ldap_server/0_master.yml
+    ansible-playbook -i host.ini 1_setup_ssh/0_master.yml
+    ansible-playbook -i host.ini 2_setup_beegfs/0_master.yml
+    ansible-playbook -i host.ini 3_setup_pbs/0_master.yml
+    ansible-playbook -i host.ini 4_ldap_server/0_master.yml
     ansible-playbook -i host.ini 5_prometheus_grafana/0_master.yml
+
+or install everything in a single go using
+
+.. code-block:: bash
+
+
+    ansible-playbook -i host.ini deploy.yml
+
 
 Now you can login to the Login node as a the `testuser1`, with password `testuser` and 
 try submitting a simple PBS job to check if everything is working as expected.

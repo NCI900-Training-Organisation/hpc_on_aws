@@ -99,9 +99,9 @@ Now create SSH key we can use within all the AWS instance
 
 .. code-block:: bash
 
-    ssh-keygen -t rsa -b 4096 -f ~/.ssh/terraform_user -C "terraform_user"
+    ssh-keygen -t rsa -b 4096 -f ~/.ssh/terraform-user -C "terraform-user"
 
-When we run the Terraform files, the public key `terraform_user.pub` will automatically be 
+When we run the Terraform files, the public key `terraform-user.pub` will automatically be 
 added to all the AWS instances. This will help us log in to the instances if we need to 
 troubleshoot any problems.
 
@@ -112,7 +112,7 @@ Now that the AWS IAM user, the HCP cloud user, and the SSH key are set up, clone
     git clone https://github.com/josephjohnjj/hpc_on_aws.git
     cd pbs-cluster
 
-Now copy the SSH key terraform_user.pub to the directory `keys/` within the directory 
+Now copy the SSH key terraform-user.pub to the directory `keys/` within the directory 
 `pbs-cluster`
 
 .. code-block:: bash

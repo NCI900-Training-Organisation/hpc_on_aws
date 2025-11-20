@@ -262,7 +262,6 @@ Then start and enable the Grafana service:
 
 
 Dashboard
-
 ~~~~~~~~~~~~~~~~~~~~~~
 
 

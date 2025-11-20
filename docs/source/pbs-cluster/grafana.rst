@@ -259,14 +259,69 @@ Then start and enable the Grafana service:
 
 
 
-Finally, access the Grafana web interface by navigating to the following URL in your web browse 
-on the local system:
+
+
+Dashboard
+
+~~~~~~~~~~~~~~~~~~~~~~
+
+
+Now that everything is set up, access the Grafana web interface by navigating to the following 
+URL in your web browser on the local system.
 
 .. code-block:: bash
 
     http://<ip-of-management-node>:3000
 
-The default username and password are both `admin`.
+
+
+
+
+.. image:: ./figs/grafana/0_login.png
+
+The default username and password are both `admin`. Once logged in, you have the following 
+landing page.
+
+
+.. image:: ./figs/grafana/1_dash.png
+
+
+The next step is to select a data source for Grafana. In our case, the datasource is Prometheus. 
+
+.. image:: ./figs/grafana/2_datasource.png
+
+Within the Prometheus data source, we have to specify the Prometheus server. In our case,  
+Grafana and Prometheus are installed on `Node1`, so we can point to the Prometheus server 
+using `localhost`. 
+
+.. image:: ./figs/grafana/3_localhost.png
+
+
+Once this is set, you can save the datasource.
+
+.. image:: ./figs/grafana/4_save.png
+
+Now that the datasource is defined, we can create a dashboard.
+
+.. image:: ./figs/grafana/5_dash.png
+
+For this, first select any metric you want in the dashboard, along with the visualisation 
+style you want. 
+
+.. image:: ./figs/grafana/6_select.png
+
+Once selected, run the query using the `Run queries` button, and this will give you the 
+dashboard for that metric.
+
+.. image:: ./figs/grafana/7_visual.png
+
+You can repeat this step for different metrics and have multiple dashboards.
+
+
+
+
+
+
 
 
 

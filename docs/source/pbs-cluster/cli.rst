@@ -113,7 +113,14 @@ A smaple output will look similar to this:
     }
 
 
-.. code-block:: bash
+
+Rocky Linux Subscription
+~~~~~~~~~~~~~~~~~~~~~~
+
+We are using Rocky Linux 9.6 as the OS for all the instances. This is usually requires a seperate sunscription in AWS.
+You can do this by going to the AWS marketplace and subscribing to the `Rocky Linux 9.6 image <https://aws.amazon.com/marketplace/pp/prodview-ygp66mwgbl2ii>`_.
+
+
 
 HCP Account and Terraform
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

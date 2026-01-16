@@ -221,6 +221,13 @@ or install everything in a single go using
 Now you can login to the Login node as a the `testuser1`, with password `testuser` and 
 try submitting a simple PBS job to check if everything is working as expected.
 
+.. admonition:: Explanation
+   :class: attention
+
+   The IP address of the login node can be found in the generated file `host.ini`
+
+
+
 .. code-block:: bash
 
     ssh testuser1@<login nodde ip>

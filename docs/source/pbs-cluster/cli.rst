@@ -135,7 +135,7 @@ In this block, set the following values
 .. code-block:: bash
 
     organization = "HpcOrg"
-    name = HpcWrkspc
+    name = "HpcWrkspc"
     
 and then run the following Terraform commands
 

@@ -6,10 +6,12 @@ infrastructure, such as servers, networks, and storage, across platforms like AW
 It defines resources in declarative .tf files, allowing you to create or destroy environments 
 consistently and repeatably.
 
+
 **Ansible** complements Terraform by handling configuration management and automation. 
 After Terraform builds the infrastructure (e.g., EC2 instances on AWS). 
 Ansible installs software, sets up services, and applies system configurations using 
 YAML-based playbooks.
+
 
 **HashiCorp Cloud Platform (HCP)** provides managed services and state storage for Terraform 
 and other HashiCorp tools, ensuring collaboration, version control, and secure remote 
@@ -18,6 +20,42 @@ state management.
 Terraform uses HCP to plan and provision resources on AWS; Ansible then configures those 
 instances and deploys applications- forming an automated, end-to-end workflow for building, 
 managing, and scaling cloud or HPC environments.
+
+Before you begin, ensure you have the following prerequisites are installed on your local system:
+
+* AWS CLI
+* Terraform
+* Ansible
+
+To check if Terraform is installed, run
+
+.. code-block:: bash
+
+    terraform version
+
+To check if Ansible is installed, run
+
+.. code-block:: bash
+
+    ansible --version
+
+To check if AWS CLI is installed, run
+
+.. code-block:: bash
+
+    aws --version
+
+
+If any of these tools are not installed, please refer to their respective installation
+guides:
+
+* AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+* Terraform: https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+
+* Ansible: https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html
+
+
 
 
 

@@ -84,7 +84,36 @@ To check if the set up worked run the following commands:
 .. code-block:: bash
 
     aws configure list
+
+A smaple output will look similar to this:
+
+.. code-block:: bash
+
+t
+      Name                    Value             Type    Location
+      ----                    -----             ----    --------
+    profile                <not set>             None    None
+    access_key     ****************Z3GD shared-credentials-file    
+    secret_key     ****************RcVO shared-credentials-file    
+    region           ap-northeast-1      config-file    ~/.aws/config
+
+
+.. code-block:: bash
+
     aws sts get-caller-identity
+
+A smaple output will look similar to this:
+
+.. code-block:: bash
+
+    {
+        "UserId": "AID****************4C",
+        "Account": "52***************0",
+        "Arn": "arn:aws:iam::52********350:user/terraform-user"
+    }
+
+
+.. code-block:: bash
 
 HCP Account and Terraform
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

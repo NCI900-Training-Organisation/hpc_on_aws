@@ -54,24 +54,30 @@ variable "instance_type" {
 # -----------------------------------------------------
 # Input Variable Declaration: ami
 # -----------------------------------------------------
-variable "ami" {
-  # This description explains what the variable is used for.
-  # The AMI (Amazon Machine Image) defines the OS and software
-  # pre-installed on the EC2 instance. It must be valid in your
-  # selected AWS region.
-  #
-  # You can look up public AMIs for Ubuntu, Amazon Linux, etc.,
-  # using the AWS Console or CLI.
-  description = "AMI ID to use for launching the EC2 instance"
-
-  # The type of the variable is a string, which holds the AMI ID.
-  type = string
-
-  # Default value to use if not specified externally.
-  # NOTE: Replace this with an AMI that is available in your region,
-  # and matches the OS/image requirements for your project.
-  default = "ami-020cba7c55df1f615" # Example AMI ID for Ubuntu 22.04 LTS
+variable "controller_ami" {
+  description = "AMI ID for the controller node"
+  type        = string
+  default     = "ami-020cba7c55df1f615"
 }
+
+variable "login_ami" {
+  description = "AMI ID for the login node"
+  type        = string
+  default     = "ami-020cba7c55df1f615"
+}
+
+variable "compute_ami" {
+  description = "AMI ID for compute nodes"
+  type        = string
+  default     = "ami-020cba7c55df1f615"
+}
+
+variable "storage_ami" {
+  description = "AMI ID for storage nodes"
+  type        = string
+  default     = "ami-020cba7c55df1f615"
+}
+
 
 
 # -----------------------------------------------------

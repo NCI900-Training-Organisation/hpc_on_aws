@@ -23,7 +23,7 @@ resource "aws_instance" "control_node" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
   #ami = "ami-05ee60afff9d0a480"  # Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.7 (Ubuntu 22.04) 20250602
-  ami = var.ami # Example AMI ID for Ubuntu 22.04 LTS
+  ami = var.controller_ami # Example AMI ID for Ubuntu 22.04 LTS
 
   # The EC2 instance type.
   #instance_type = "p4d.24xlarge" # Eight A100 GPUs, 96 vCPUs, 1152 GiB RAM
@@ -132,7 +132,7 @@ resource "aws_instance" "login_node" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
   #ami = "ami-05ee60afff9d0a480"  # Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.7 (Ubuntu 22.04) 20250602
-  ami = var.ami # Example AMI ID for Ubuntu 22.04 LTS
+  ami = var.login_ami # Example AMI ID for Ubuntu 22.04 LTS
 
   # The EC2 instance type.
   #instance_type = "p4d.24xlarge" # Eight A100 GPUs, 96 vCPUs, 1152 GiB RAM
@@ -208,7 +208,7 @@ resource "aws_instance" "compute_node" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
   #ami = "ami-05ee60afff9d0a480"  # Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.7 (Ubuntu 22.04) 20250602
-  ami = var.ami # Example AMI ID for Ubuntu 22.04 LTS
+  ami = var.compute_ami # Example AMI ID for Ubuntu 22.04 LTS
 
   # The EC2 instance type.
   #instance_type = "p4d.24xlarge" # Eight A100 GPUs, 96 vCPUs, 1152 GiB RAM
@@ -294,7 +294,7 @@ resource "aws_instance" "storage_node" {
   # The AMI ID for the EC2 instance.
   # This AMI must exist in your selected region.
   #ami = "ami-05ee60afff9d0a480"  # Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.7 (Ubuntu 22.04) 20250602
-  ami = var.ami # Example AMI ID for Ubuntu 22.04 LTS
+  ami = var.storage_ami # Example AMI ID for Ubuntu 22.04 LTS
 
   # The EC2 instance type.
   #instance_type = "p4d.24xlarge" # Eight A100 GPUs, 96 vCPUs, 1152 GiB RAM

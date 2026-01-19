@@ -89,9 +89,9 @@ A smaple output will look similar to this:
 
 .. code-block:: bash
 
-t
-      Name                    Value             Type    Location
-      ----                    -----             ----    --------
+
+    Name                    Value             Type    Location
+    ----                    -----             ----    --------
     profile                <not set>             None    None
     access_key     ****************Z3GD shared-credentials-file    
     secret_key     ****************RcVO shared-credentials-file    
@@ -125,15 +125,36 @@ You can do this by going to the AWS marketplace and subscribing to the `Rocky Li
 HCP Account and Terraform
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, create a Hashicorp account (you can use the GitHUB SSO for this). Then, create an 
-HCP user token. We will be using this token to log in from the local system later.
 
-Now, create an organization in the HCP account. You will be using this organization in one 
-of the Terraform file later. For the time being, let's call the organization `HpcOrg`. Inside 
-the organization, `HpcOrg` create a project- let's call it `HpcProj`. Now, within that 
-`HpcProj` create a workspace called `HpcWrkspc`.
 
-Then create a variable set called `aws_credentials` with the following values.
+First, create a **HashiCorp Cloud Platform (HCP)** account. During the sign-up process, you can 
+simplify authentication by using **GitHub Single Sign-On (SSO)** instead of creating a separate 
+username and password. 
+
+Once the account is created and you are logged in to the HCP console, 
+generate an `HCP user token. <https://developer.hashicorp.com/terraform/cloud-docs/users-teams-organizations/api-tokens>`_
+This token acts as a secure credential that allows command-line tools 
+(such as the HCP CLI or Terraform) running on your local system to authenticate with your HCP account.
+We will store and use this token later to log in from the local machine and authorize API operations 
+against HCP.
+
+Next, create an `Organisation. <https://developer.hashicorp.com/hcp/docs/hcp/admin/orgs>`_ within your HCP account. An organization serves as a top-level 
+logical container for managing access control, billing, and shared resources. This organization 
+identifier will be referenced later in one of the Terraform configuration files, so it is important 
+to choose and remember a consistent name. For now, we will refer to this organization as `HpcOrg`.
+
+Within the `HpcOrg` organization, create a `project <https://developer.hashicorp.com/hcp/docs/hcp/admin/projects>`_ 
+named `HpcProj`. Projects allow you to group related infrastructure resources and apply scoped 
+permissions, making it easier to manage environments such as development, staging, or production. 
+
+Finally, inside the `HpcProj` project, create a `workspace <https://developer.hashicorp.com/terraform/cloud-docs/workspaces>`_ 
+called `HpcWrkspc`. This workspace will be used to manage Terraform runs and state, 
+and it represents the execution context where Terraform configurations are applied and tracked.
+
+Now that the HCP account, organization, project, and workspace are set up, we need to
+configure the AWS IAM user credentials within the HCP workspace. To do this, create a 
+`variable set  <https://developer.hashicorp.com/terraform/cloud-docs/api-docs/variable-sets>`_ 
+called **aws_credentials** in the organization `HpcOrg`, with the following values.
 
 .. image:: ./figs/variable_set.png
 
@@ -148,7 +169,7 @@ IAM user credentials as a variable set.
 In addition to the variable set, create variables specific to this workspace. In this case, 
 our workspace-specific variables are
 
-* **ami** : Which give the AMI of the Rocky 9.6 OS we are using.
+* **ami** : Which give the AMI of the Rocky 9.6 OS we are using. In this case, it is `ami-0f2425d4cce4e97dd`.
 
 * **instance_type**: Which give the compute type we are using, in this case `t3.2xlarge`.
 
@@ -157,8 +178,8 @@ We also tested Ubuntu and Red Hat AMI, but it was difficult installing some pack
 We also tried the free tier of instance type, but it was running into memory issues when 
 building and installing the required packages.
 
-The adavantage of having the AMI and instace type as the variable is that you can chnage 
-both without changing your Terraform files. In fact, it is a goof idea to have all the 
+The adavantage of having the AMI and instace type as the variable is that you can change 
+both without changing your Terraform files. In fact, it is a good idea to have all the 
 AWS specific values in the Terraform file as a variable in the workspace.
 
 Now that the HCP account is set up you can log in to the HCP from the CLI of your local system.

@@ -169,9 +169,18 @@ IAM user credentials as a variable set.
 In addition to the variable set, create variables specific to this workspace. In this case, 
 our workspace-specific variables are
 
-* **ami** : Which give the AMI of the Rocky 9.6 OS we are using. In this case, it is `ami-0f2425d4cce4e97dd`.
+* **controller_ami** : AMI ID used for the controller node. This should point to the Rocky Linux 9.6 OS image. 
+
+* **login_ami** : AMI ID used for the login node.Typically the same Rocky Linux 9.6 OS image, unless a lighter or hardened image is required. 
+
+* **compute_ami** : AMI ID used for the compute nodes. This may differ from the controller/login AMI (for example, a GPU-enabled or CUDA-preinstalled image).
+
+* **storage_ami** : AMI ID used for the storage nodes. This can be customized to include filesystem or storage-specific tooling if required.
 
 * **instance_type**: Which give the compute type we are using, in this case `t3.2xlarge`.
+
+In this example, we are using the AMI `ami-0f2425d4cce4e97dd`, which is the Rocky Linux 9.6 (Blue Onyx)
+for all node types.
 
 The AMI and instance type we use here may not be available for the free tier of the AWS account. 
 We also tested Ubuntu and Red Hat AMI, but it was difficult installing some packages in both. 

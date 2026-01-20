@@ -49,13 +49,11 @@ To check if AWS CLI is installed, run
 If any of these tools are not installed, please refer to their respective installation
 guides:
 
-* AWS CLI: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+* `AWS CLI installation guide <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html>`_ 
 
-* Terraform: https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+* `Terraform CLI installation guide <https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli>`_ 
 
-* Ansible: https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html
-
-
+* `Ansible CLI installation guide < https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html>`_ 
 
 
 

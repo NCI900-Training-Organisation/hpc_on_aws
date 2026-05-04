@@ -1,105 +1,132 @@
-# ---------------------------------------------------------
-# Play 11: Install Intel MKL via Spack (HPC-safe version)
-# ---------------------------------------------------------
-- name: Install Intel MKL using Spack
+---
+- name: Install optimized math libraries via Spack
   hosts: all
   become: yes
   gather_facts: yes
 
   vars:
     spack_root: /apps/spack
-    spack_mkl_package: intel-oneapi-mkl
+    spack_user: spackuser
 
-  environment:
-    SPACK_ROOT: "{{ spack_root }}"
-    PATH: "{{ spack_root }}/bin:{{ ansible_env.PATH }}"
+    mkl_pkg: intel-oneapi-mkl
+    arm_pkg: openblas  # or blis
 
   tasks:
 
     # -----------------------------------------------------
-    # Verify Spack environment
+    # Detect architecture
     # -----------------------------------------------------
-    - name: Check Spack is available
-      command: "{{ spack_root }}/bin/spack --version"
-      register: spack_version
-      changed_when: false
-      tags: mkl,spack
+    - name: Set architecture type
+      set_fact:
+        is_x86: "{{ ansible_facts['architecture'] == 'x86_64' }}"
+        is_arm: "{{ ansible_facts['architecture'] in ['aarch64', 'arm64'] }}"
 
-    - name: Detect available compilers
+    - name: Show architecture
+      debug:
+        msg: "Architecture = {{ ansible_facts['architecture'] }}"
+
+    # -----------------------------------------------------
+    # Load Spack env once (reuse pattern)
+    # -----------------------------------------------------
+    - name: Define Spack environment loader
+      set_fact:
+        spack_env: "source {{ spack_root }}/share/spack/setup-env.sh"
+
+    # -----------------------------------------------------
+    # Ensure compilers
+    # -----------------------------------------------------
+    - name: Detect compilers
+      become_user: "{{ spack_user }}"
       shell: |
-        source {{ spack_root }}/share/spack/setup-env.sh
-        spack compilers
+        {{ spack_env }}
+        spack compiler find
       args:
         executable: /bin/bash
-      register: compiler_list
       changed_when: false
-      tags: mkl,spack
-
-    - name: Show compilers
-      debug:
-        var: compiler_list.stdout_lines
-      tags: mkl,spack
 
     # -----------------------------------------------------
-    # Install MKL (idempotent check)
+    # INSTALL: x86 → MKL
     # -----------------------------------------------------
-    - name: Check if Intel MKL is already installed
+    - name: Check MKL
+      become_user: "{{ spack_user }}"
       shell: |
-        source {{ spack_root }}/share/spack/setup-env.sh
-        spack find {{ spack_mkl_package }}
+        {{ spack_env }}
+        spack find --format '{name}' {{ mkl_pkg }}
       args:
         executable: /bin/bash
       register: mkl_check
       changed_when: false
-      failed_when: false
-      tags: mkl
+      when: is_x86
 
-    - name: Install Intel MKL via Spack (only if missing)
+    - name: Install MKL (x86 only)
+      become_user: "{{ spack_user }}"
       shell: |
-        source {{ spack_root }}/share/spack/setup-env.sh
-        spack install {{ spack_mkl_package }}
+        {{ spack_env }}
+        spack install {{ mkl_pkg }} %gcc
       args:
         executable: /bin/bash
-      when: "'No package matches' in mkl_check.stderr or mkl_check.rc != 0"
-      tags: mkl
+      when:
+        - is_x86
+        - mkl_check.stdout.strip() == ""
 
     # -----------------------------------------------------
-    # Load MKL environment (system-wide)
+    # INSTALL: ARM → OpenBLAS (or BLIS)
     # -----------------------------------------------------
-    - name: Create MKL environment module script
+    - name: Check OpenBLAS
+      become_user: "{{ spack_user }}"
+      shell: |
+        {{ spack_env }}
+        spack find --format '{name}' {{ arm_pkg }}
+      args:
+        executable: /bin/bash
+      register: blas_check
+      changed_when: false
+      when: is_arm
+
+    - name: Install OpenBLAS (ARM fallback)
+      become_user: "{{ spack_user }}"
+      shell: |
+        {{ spack_env }}
+        spack install {{ arm_pkg }} %gcc
+      args:
+        executable: /bin/bash
+      when:
+        - is_arm
+        - blas_check.stdout.strip() == ""
+
+    # -----------------------------------------------------
+    # Modules refresh (common)
+    # -----------------------------------------------------
+    - name: Refresh Spack modules
+      become_user: "{{ spack_user }}"
+      shell: |
+        {{ spack_env }}
+        spack module tcl refresh -y
+      args:
+        executable: /bin/bash
+
+    # -----------------------------------------------------
+    # Dynamic module path (FIX your hardcoding issue)
+    # -----------------------------------------------------
+    - name: Configure module path dynamically
       copy:
-        dest: /etc/profile.d/mkl.sh
+        dest: /etc/profile.d/spack-modules.sh
         mode: '0755'
         content: |
-          # Intel MKL via Spack
-          export SPACK_ROOT={{ spack_root }}
-          source {{ spack_root }}/share/spack/setup-env.sh
-          spack load {{ spack_mkl_package }}
-      tags: mkl
+          export MODULEPATH={{ spack_root }}/share/spack/modules/linux-$(uname -m):$MODULEPATH
 
     # -----------------------------------------------------
     # Verification
     # -----------------------------------------------------
-    - name: Verify MKL installation
+    - name: Verify install
+      become_user: "{{ spack_user }}"
       shell: |
-        source {{ spack_root }}/share/spack/setup-env.sh
-        spack find {{ spack_mkl_package }}
+        {{ spack_env }}
+        spack find
       args:
         executable: /bin/bash
-      register: mkl_verify
+      register: verify
       changed_when: false
-      tags: mkl,verify
 
-    - name: Show MKL install status
-      debug:
-        var: mkl_verify.stdout_lines
-      tags: verify
-
-    # -----------------------------------------------------
-    # Reboot
-    # -----------------------------------------------------
-    - name: Reboot nodes
-      reboot:
-        reboot_timeout: 600
-        test_command: whoami
-      tags: reboot
+    - debug:
+        var: verify.stdout_lines

@@ -22,7 +22,7 @@ fi
 echo "[ec2]" > host.ini
 count=1
 while IFS= read -r ip; do
-  echo "node${count} ansible_host=$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/terraform-user" >> host.ini
+  echo "node${count} ansible_host=$ip ansible_user=rocky ansible_ssh_private_key_file=~/.ssh/terraform-user" >> host.ini
   ((count++))
 done <<< "$CLEANED_OUTPUT"
 

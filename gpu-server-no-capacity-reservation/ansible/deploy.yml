@@ -1,0 +1,34 @@
+---
+# ---------------------------------------------------------
+# Master GPU Cluster Deployment (Laptop Runner)
+# ---------------------------------------------------------
+
+- import_playbook: 2_validate_system.yml
+  tags: validate
+
+- import_playbook: 3_install_packages.yml
+  tags: packages
+
+- import_playbook: 4_install_spack.yml
+  tags: spack
+
+#- import_playbook: 5_setup_mig.yml
+#  tags: mig
+#
+#- import_playbook: 6_create_mig_instances.yml
+#  tags: mig_instances
+
+- import_playbook: 7_setup_users.yml
+  tags: users
+
+- import_playbook: 8_setup_permissions.yml
+  tags: permissions
+
+- import_playbook: 9_install_cuda.yml
+  tags: cuda
+
+- import_playbook: 10_password_login.yml
+  tags: ssh
+
+- import_playbook: 11_install_mkl.yml
+  tags: mkl

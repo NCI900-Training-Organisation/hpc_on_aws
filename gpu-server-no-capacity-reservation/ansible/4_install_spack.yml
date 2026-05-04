@@ -1,85 +1,95 @@
 # ---------------------------------------------------------
-# Play 3: Clone Spack into /apps
+# Play 3: Install Spack into /apps/spack
 # ---------------------------------------------------------
-- name: Install Spack into /apps/spack
-  hosts: ec2
+- name: Install Spack into /apps
+  hosts: all
   become: yes
-  gather_facts: no  # previously gathered
+  gather_facts: yes
+
   vars:
     app_dir: /apps
+    spack_dir: /apps/spack
     git_repo: "https://github.com/spack/spack.git"
+    deploy_user: "rocky"
 
   tasks:
-    # Create the /apps directory with user ownership
+
+    # -----------------------------------------------------
+    # Ensure base directory exists
+    # -----------------------------------------------------
     - name: Create /apps directory
       file:
         path: "{{ app_dir }}"
         state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
         mode: "0755"
 
-    # Clone the Spack repository into /apps/spack
-    - name: Clone spack repo into /apps/spack if not present
+    # -----------------------------------------------------
+    # Clone Spack (idempotent)
+    # -----------------------------------------------------
+    - name: Clone Spack repository
       git:
         repo: "{{ git_repo }}"
-        dest: "{{ app_dir }}/spack"
-      become_user: "{{ ansible_user }}"
+        dest: "{{ spack_dir }}"
+        version: develop
+        update: yes
+      become_user: "{{ deploy_user }}"
 
-
-# ---------------------------------------------------------
-# Play 4: Set Ownership of /apps to the Current User
-# ---------------------------------------------------------
-- name: Set ownership of /apps to the current user
-  hosts: ec2
-  become: yes
-  gather_facts: yes
-
-  tasks:
-    - name: Set recursive ownership of /apps
+    # -----------------------------------------------------
+    # Fix ownership recursively (only spack dir)
+    # -----------------------------------------------------
+    - name: Ensure correct ownership of Spack directory
       file:
-        path: /apps
+        path: "{{ spack_dir }}"
         state: directory
         recurse: yes
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-
+        owner: "{{ deploy_user }}"
+        group: "{{ deploy_user }}"
 
 # ---------------------------------------------------------
-# Play 5: Make Spack Available System-Wide
+# Play 4: Configure Spack system-wide
 # ---------------------------------------------------------
-- name: Make Spack environment available system-wide
-  hosts: ec2
+- name: Configure Spack environment globally
+  hosts: all
   become: yes
   gather_facts: yes
 
+  vars:
+    spack_dir: /apps/spack
+
   tasks:
-    # Create a shell script to auto-source Spack for all users
-    - name: Create /etc/profile.d/spack.sh with Spack environment setup
+
+    - name: Create Spack environment script
       copy:
         dest: /etc/profile.d/spack.sh
         content: |
-          export SPACK_ROOT=/apps/spack
-          . $SPACK_ROOT/share/spack/setup-env.sh
+          # Spack environment setup
+          export SPACK_ROOT={{ spack_dir }}
+          if [ -f "$SPACK_ROOT/share/spack/setup-env.sh" ]; then
+              . "$SPACK_ROOT/share/spack/setup-env.sh"
+          fi
         owner: root
         group: root
-        mode: '0644'
-
+        mode: "0644"
 
 # ---------------------------------------------------------
-# Play 6: Run Spack and Print Its Version
+# Play 5: Validate Spack installation
 # ---------------------------------------------------------
-- name: Run a command with Spack environment activated
-  hosts: ec2
+- name: Validate Spack installation
+  hosts: all
   become: yes
   gather_facts: no
 
   tasks:
-    - name: Print Spack version
-      shell: . /etc/profile.d/spack.sh && spack --version
+
+    - name: Check Spack version
+      shell: |
+        source /etc/profile.d/spack.sh
+        spack --version
       register: spack_version
       changed_when: false
 
-    - name: Show Spack version output
+    - name: Show Spack version
       debug:
-        var: spack_version.stdout
+        msg: "Spack version: {{ spack_version.stdout }}"

@@ -3,32 +3,50 @@
 # Master GPU Cluster Deployment (Laptop Runner)
 # ---------------------------------------------------------
 
-- import_playbook: 2_validate_system.yml
-  tags: validate
+# ---------------------------------------------------------
+# System validation
+# ---------------------------------------------------------
+- import_playbook: 1_validate_system.yml
+  tags: [validate, system]
 
-- import_playbook: 3_install_packages.yml
-  tags: packages
+# ---------------------------------------------------------
+# Base OS + utilities
+# ---------------------------------------------------------
+- import_playbook: 2_install_base_packages.yml
+  tags: [packages, base]
 
-- import_playbook: 4_install_spack.yml
-  tags: spack
+# ---------------------------------------------------------
+# GPU drivers
+# ---------------------------------------------------------
+- import_playbook: 3_install_drivers.yml
+  tags: [drivers, gpu]
 
-#- import_playbook: 5_setup_mig.yml
-#  tags: mig
-#
-#- import_playbook: 6_create_mig_instances.yml
-#  tags: mig_instances
+# ---------------------------------------------------------
+# SSH configuration (password login etc.)
+# ---------------------------------------------------------
+- import_playbook: 4_password_login.yml
+  tags: [ssh, auth]
 
-- import_playbook: 7_setup_users.yml
-  tags: users
+# ---------------------------------------------------------
+# User + group setup
+# ---------------------------------------------------------
+- import_playbook: 5_setup_users.yml
+  tags: [users, accounts]
 
-- import_playbook: 8_setup_permissions.yml
-  tags: permissions
+# ---------------------------------------------------------
+# Spack installation
+# ---------------------------------------------------------
+- import_playbook: 6_install_spack.yml
+  tags: [spack, hpc]
 
-- import_playbook: 9_install_cuda.yml
-  tags: cuda
+# ---------------------------------------------------------
+# CUDA toolkit
+# ---------------------------------------------------------
+- import_playbook: 7_install_cuda.yml
+  tags: [cuda, gpu]
 
-- import_playbook: 10_password_login.yml
-  tags: ssh
-
-- import_playbook: 11_install_mkl.yml
-  tags: mkl
+# ---------------------------------------------------------
+# Intel MKL
+# ---------------------------------------------------------
+- import_playbook: 8_install_mkl.yml
+  tags: [mkl, math]

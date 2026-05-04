@@ -1,8 +1,8 @@
 # ---------------------------------------------------------
-# Play 11: Install Intel MKL via Spack
+# Play 11: Install Intel MKL via Spack (HPC-safe version)
 # ---------------------------------------------------------
 - name: Install Intel MKL using Spack
-  hosts: ec2
+  hosts: all
   become: yes
   gather_facts: yes
 
@@ -10,51 +10,87 @@
     spack_root: /apps/spack
     spack_mkl_package: intel-oneapi-mkl
 
-  # Set up Spack environment for all tasks in this play
   environment:
     SPACK_ROOT: "{{ spack_root }}"
     PATH: "{{ spack_root }}/bin:{{ ansible_env.PATH }}"
-    BASH_ENV: "{{ spack_root }}/share/spack/setup-env.sh"
 
   tasks:
-    - name: List available Spack packages
-      shell: . {{ spack_root }}/share/spack/setup-env.sh && spack list
-      register: spack_list
-      changed_when: false
 
-    - name: Detect installed compilers
-      shell: . {{ spack_root }}/share/spack/setup-env.sh && spack compiler find
-      register: compiler_find
+    # -----------------------------------------------------
+    # Verify Spack environment
+    # -----------------------------------------------------
+    - name: Check Spack is available
+      command: "{{ spack_root }}/bin/spack --version"
+      register: spack_version
       changed_when: false
+      tags: mkl,spack
 
-    - name: List recognized compilers
-      shell: . {{ spack_root }}/share/spack/setup-env.sh && spack compilers
+    - name: Detect available compilers
+      shell: |
+        source {{ spack_root }}/share/spack/setup-env.sh
+        spack compilers
+      args:
+        executable: /bin/bash
       register: compiler_list
       changed_when: false
+      tags: mkl,spack
 
-    - name: Output recognized compilers
+    - name: Show compilers
       debug:
         var: compiler_list.stdout_lines
+      tags: mkl,spack
 
-    - name: Install Intel MKL
+    # -----------------------------------------------------
+    # Install MKL (idempotent check)
+    # -----------------------------------------------------
+    - name: Check if Intel MKL is already installed
       shell: |
-        . {{ spack_root }}/share/spack/setup-env.sh
+        source {{ spack_root }}/share/spack/setup-env.sh
+        spack find {{ spack_mkl_package }}
+      args:
+        executable: /bin/bash
+      register: mkl_check
+      changed_when: false
+      failed_when: false
+      tags: mkl
+
+    - name: Install Intel MKL via Spack (only if missing)
+      shell: |
+        source {{ spack_root }}/share/spack/setup-env.sh
         spack install {{ spack_mkl_package }}
       args:
         executable: /bin/bash
+      when: "'No package matches' in mkl_check.stderr or mkl_check.rc != 0"
+      tags: mkl
 
-    - name: Persist MKL environment for all users
-      lineinfile:
-        path: /etc/profile.d/mkl.sh
-        create: yes
-        line: 'source {{ spack_root }}/share/spack/setup-env.sh && spack load {{ spack_mkl_package }}'
-        state: present
+    # -----------------------------------------------------
+    # Load MKL environment (system-wide)
+    # -----------------------------------------------------
+    - name: Create MKL environment module script
+      copy:
+        dest: /etc/profile.d/mkl.sh
+        mode: '0755'
+        content: |
+          # Intel MKL via Spack
+          export SPACK_ROOT={{ spack_root }}
+          source {{ spack_root }}/share/spack/setup-env.sh
+          spack load {{ spack_mkl_package }}
+      tags: mkl
 
-    - name: List installed Spack packages
-      shell: . {{ spack_root }}/share/spack/setup-env.sh && spack find
-      register: spack_find
+    # -----------------------------------------------------
+    # Verification
+    # -----------------------------------------------------
+    - name: Verify MKL installation
+      shell: |
+        source {{ spack_root }}/share/spack/setup-env.sh
+        spack find {{ spack_mkl_package }}
+      args:
+        executable: /bin/bash
+      register: mkl_verify
       changed_when: false
+      tags: mkl,verify
 
-    - name: Output installed Spack packages
+    - name: Show MKL install status
       debug:
-        var: spack_find.stdout_lines
+        var: mkl_verify.stdout_lines
+      tags: verify

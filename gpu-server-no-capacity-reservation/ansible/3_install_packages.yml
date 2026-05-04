@@ -1,28 +1,148 @@
 # ---------------------------------------------------------
-# Play 2: Install Required System Packages
+# Play 1: System Update + Base Preparation (Rocky Linux 9.6)
 # ---------------------------------------------------------
-- name: Install required system packages
-  hosts: ec2
+- name: Update packages safely on all nodes
+  hosts: all
   become: yes
   gather_facts: yes
 
-  vars:
-    required_packages:
-      - acl
-      - build-essential
-      - curl
-      - git
-      - wget
-      - htop
-
   tasks:
-    # Update the package index
-    - name: Force apt update
-      apt:
-        update_cache: yes
 
-    # Install system tools and libraries
-    - name: Install required packages
-      apt:
-        name: "{{ required_packages }}"
+    # -----------------------------------------------------
+    # SELinux handling
+    # -----------------------------------------------------
+    - name: Set SELinux to permissive
+      command: setenforce 0
+      ignore_errors: yes
+      tags: disable_selinux
+
+    - name: Disable SELinux permanently in config
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: "^SELINUX="
+        line: "SELINUX=disabled"
         state: present
+      ignore_errors: yes
+      tags: disable_selinux
+
+    # -----------------------------------------------------
+    # Enable repos (Rocky-specific)
+    # -----------------------------------------------------
+    - name: Enable CRB repository
+      shell: dnf config-manager --set-enabled crb
+      args:
+        executable: /bin/bash
+      tags: repo
+
+    - name: Enable Plus repository
+      shell: dnf config-manager --set-enabled plus
+      args:
+        executable: /bin/bash
+      tags: repo
+
+    # -----------------------------------------------------
+    # DNF refresh
+    # -----------------------------------------------------
+    - name: Clean and rebuild DNF cache
+      shell: |
+        dnf clean all
+        dnf makecache
+      args:
+        executable: /bin/bash
+      tags: dnf
+
+    # -----------------------------------------------------
+    # Core system upgrade
+    # -----------------------------------------------------
+    - name: Update glibc and core libraries first
+      dnf:
+        name:
+          - glibc
+          - glibc-devel
+          - glibc-common
+        state: latest
+      tags: core
+
+    - name: Update all packages
+      dnf:
+        name: "*"
+        state: latest
+      tags: update
+
+    # -----------------------------------------------------
+    # EPEL + sync
+    # -----------------------------------------------------
+    - name: Install EPEL repository
+      dnf:
+        name: epel-release
+        state: present
+      tags: epel
+
+    - name: Distro sync (best effort)
+      shell: dnf distro-sync -y
+      args:
+        executable: /bin/bash
+      ignore_errors: yes
+      tags: distro_sync
+
+    # -----------------------------------------------------
+    # Development tools
+    # -----------------------------------------------------
+    - name: Install Development Tools group
+      dnf:
+        name: "@Development Tools"
+        state: present
+      tags: devtools
+
+    # -----------------------------------------------------
+    # Base + extended system packages
+    # (Merged Play 2 converted from apt → dnf)
+    # -----------------------------------------------------
+    - name: Install required system packages
+      dnf:
+        name:
+          - acl
+          - curl
+          - git
+          - wget
+          - htop
+          - vim
+          - net-tools
+          - nano
+          - unzip
+          - tar
+          - lsof
+          - which
+          - bind-utils
+          - pciutils
+        state: present
+      tags: packages
+
+    # -----------------------------------------------------
+    # Additional common dev tools (your original list kept)
+    # -----------------------------------------------------
+    - name: Install additional build tools
+      dnf:
+        name:
+          - python3
+          - python3-devel
+          - perl
+          - autoconf
+          - automake
+          - gcc
+          - gcc-c++
+          - make
+          - cmake
+          - chkconfig
+          - nmap-ncat
+        state: present
+      tags: build
+
+    # -----------------------------------------------------
+    # Reboot
+    # -----------------------------------------------------
+    - name: Reboot nodes
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      tags: reboot

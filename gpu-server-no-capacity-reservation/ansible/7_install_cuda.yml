@@ -72,3 +72,12 @@
     - name: Output installed packages
       debug:
         var: spack_find.stdout_lines
+
+    # -----------------------------------------------------
+    # Reboot
+    # -----------------------------------------------------
+    - name: Reboot nodes
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      tags: reboot

@@ -93,3 +93,12 @@
     - name: Show Spack version
       debug:
         msg: "Spack version: {{ spack_version.stdout }}"
+
+    # -----------------------------------------------------
+    # Reboot
+    # -----------------------------------------------------
+    - name: Reboot nodes
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      tags: reboot

@@ -148,54 +148,6 @@
         state: present
       tags: build
 
-    # -----------------------------------------------------
-    # Reboot
-    # -----------------------------------------------------
-    - name: Reboot nodes
-      reboot:
-        reboot_timeout: 600
-        test_command: whoami
-      tags: reboot
-
-
-        # -----------------------------------------------------
-    # NVIDIA CUDA / Driver Installation (Rocky 9.6)
-    # -----------------------------------------------------
-
-    - name: Add NVIDIA CUDA repository (RHEL9)
-      get_url:
-        url: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo
-        dest: /etc/yum.repos.d/cuda-rhel9.repo
-        mode: '0644'
-      tags: nvidia_driver
-
-    - name: Clean DNF cache after adding NVIDIA repo
-      shell: |
-        dnf clean all
-        dnf makecache
-      args:
-        executable: /bin/bash
-      tags: nvidia_driver
-
-    - name: Install NVIDIA driver (CUDA-enabled stack)
-      dnf:
-        name:
-          - nvidia-driver-cuda
-        state: present
-      tags: nvidia_driver
-
-
-    - name: Check if NVIDIA GPU is detected
-      shell: lspci | grep -i nvidia || true
-      register: nvidia_gpu_check
-      changed_when: false
-      tags: nvidia_driver
-
-    - name: Show GPU detection result
-      debug:
-        var: nvidia_gpu_check.stdout
-      tags: nvidia_driver
-
 
     # -----------------------------------------------------
     # Reboot

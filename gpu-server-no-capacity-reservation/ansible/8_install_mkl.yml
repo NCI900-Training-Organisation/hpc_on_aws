@@ -94,3 +94,12 @@
       debug:
         var: mkl_verify.stdout_lines
       tags: verify
+
+    # -----------------------------------------------------
+    # Reboot
+    # -----------------------------------------------------
+    - name: Reboot nodes
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      tags: reboot

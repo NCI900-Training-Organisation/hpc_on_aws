@@ -43,6 +43,14 @@
     # -----------------------------------------------------
     # GPU CHECK (V100 or newer, PCI-based, no nvidia-smi)
     # -----------------------------------------------------
+
+    - name: Install pciutils for GPU detection
+      dnf:
+        name:
+          - pciutils
+        state: present
+      tags: packages
+
     - name: Detect NVIDIA GPU via PCI
       shell: lspci | grep -i nvidia
       register: gpu_pci

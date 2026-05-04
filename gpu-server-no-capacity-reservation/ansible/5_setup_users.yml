@@ -1,0 +1,138 @@
+---
+# =========================================================
+# Play 1: Setup spackadmin group, user, and /apps access
+# =========================================================
+- name: Setup spackadmin group, users, and secure /apps
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    spack_group: spackadmin
+    spack_user: spackuser
+    spack_dir: /apps
+    current_user: rocky
+
+    # CUDA user settings (kept here for shared context)
+    cuda_group: cudauser
+    user_count: 40
+    user_prefix: "user"
+    default_password: "CHANGE_ME_NOW"
+
+  tasks:
+
+    # -----------------------------------------------------
+    # Group setup
+    # -----------------------------------------------------
+    - name: Create spackadmin group
+      group:
+        name: "{{ spack_group }}"
+        state: present
+
+    - name: Create cudauser group
+      group:
+        name: "{{ cuda_group }}"
+        state: present
+
+    # -----------------------------------------------------
+    # User setup
+    # -----------------------------------------------------
+    - name: Create spack user
+      user:
+        name: "{{ spack_user }}"
+        groups: "{{ spack_group }}"
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Add admin user to spack group
+      user:
+        name: "{{ current_user }}"
+        groups: "{{ spack_group }}"
+        append: yes
+
+    - name: Create CUDA users
+      user:
+        name: "{{ user_prefix }}{{ item }}"
+        groups: "{{ cuda_group }}"
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ default_password | password_hash('sha512') }}"
+        state: present
+      loop: "{{ range(1, user_count + 1) | list }}"
+
+    # -----------------------------------------------------
+    # Sudo configuration
+    # -----------------------------------------------------
+    - name: Grant passwordless sudo to spackadmin group
+      copy:
+        dest: "/etc/sudoers.d/{{ spack_group }}"
+        content: "{{ spack_group }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+
+    # -----------------------------------------------------
+    # /apps permissions and ownership
+    # -----------------------------------------------------
+    - name: Ensure /apps directory exists
+      file:
+        path: "{{ spack_dir }}"
+        state: directory
+        owner: root
+        group: "{{ spack_group }}"
+        mode: "2775"   # setgid + group writable
+
+
+# =========================================================
+# Play 2: Configure ACL permissions for cudauser on /apps
+# =========================================================
+- name: Configure ACL permissions for cudauser group
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    spack_dir: /apps
+    cuda_group: cudauser
+
+  tasks:
+
+    # -----------------------------------------------------
+    # Install ACL utilities
+    # -----------------------------------------------------
+    - name: Ensure ACL package is installed
+      dnf:
+        name: acl
+        state: present
+
+    # -----------------------------------------------------
+    # Apply ACL permissions
+    # -----------------------------------------------------
+    - name: Grant read/execute permissions to cudauser on /apps
+      acl:
+        path: "{{ spack_dir }}"
+        entity: "{{ cuda_group }}"
+        etype: group
+        permissions: rx
+        state: present
+
+    - name: Set default ACL for cudauser on /apps
+      acl:
+        path: "{{ spack_dir }}"
+        entity: "{{ cuda_group }}"
+        etype: group
+        permissions: rx
+        default: yes
+        state: present
+
+    # -----------------------------------------------------
+    # Reboot
+    # -----------------------------------------------------
+    - name: Reboot nodes
+      reboot:
+        reboot_timeout: 600
+        test_command: whoami
+      tags: reboot

@@ -184,12 +184,6 @@
         state: present
       tags: nvidia_driver
 
-    - name: Install NVIDIA utilities (nvidia-smi, etc.)
-      dnf:
-        name:
-          - nvidia-utils
-        state: present
-      tags: nvidia_driver
 
     - name: Check if NVIDIA GPU is detected
       shell: lspci | grep -i nvidia || true

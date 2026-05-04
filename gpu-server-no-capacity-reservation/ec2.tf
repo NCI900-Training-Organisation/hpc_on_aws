@@ -50,7 +50,7 @@ resource "aws_instance" "GpuTrainingServer" {
   # Configure root volume
   root_block_device {
     volume_type           = "gp3" # Use gp3 for improved performance and cost control
-    volume_size           = 300   # 300 GiB
+    volume_size           = 500   # 300 GiB
     iops                  = 3000  # Provisioned IOPS (default for gp3 is 3000)
     encrypted             = false # Set to false for unencrypted volume (default is false)
     delete_on_termination = true  # Deletes the volume when the instance is terminated

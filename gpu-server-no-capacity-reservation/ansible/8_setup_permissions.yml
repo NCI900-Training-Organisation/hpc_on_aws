@@ -1,24 +1,40 @@
 # ---------------------------------------------------------
 # Play 10: Grant ACL Permissions on /apps to cudauser Group
 # ---------------------------------------------------------
-- name: Grant ACL-based permissions to cudauser group on /apps
-  hosts: ec2
+- name: Configure ACL permissions for cudauser on /apps
+  hosts: all
   become: yes
   gather_facts: yes
 
   tasks:
-    # Ensure 'acl' command-line utility is available
+
+    # -----------------------------------------------------
+    # Install ACL tools (Rocky Linux)
+    # -----------------------------------------------------
     - name: Ensure ACL package is installed
-      apt:
+      dnf:
         name: acl
         state: present
-        update_cache: yes
-      when: ansible_os_family == "Debian"
 
-    # Grant read and execute permissions recursively to group cudauser
-    - name: Grant read and execute (rx) permissions recursively to group cudauser
-      command: setfacl -R -m g:cudauser:rx /apps
+    # -----------------------------------------------------
+    # Ensure base ACL permission (group access)
+    # -----------------------------------------------------
+    - name: Grant group read/execute permissions on /apps
+      acl:
+        path: /apps
+        entity: cudauser
+        etype: group
+        permissions: rx
+        state: present
 
-    # Set default ACL so future files/directories also inherit the same permission
-    - name: Set default ACL for new files/folders in /apps for group cudauser
-      command: setfacl -R -d -m g:cudauser:rx /apps
+    # -----------------------------------------------------
+    # Default ACL (inherit for new files)
+    # -----------------------------------------------------
+    - name: Set default ACL for cudauser group on /apps
+      acl:
+        path: /apps
+        entity: cudauser
+        etype: group
+        permissions: rx
+        default: yes
+        state: present

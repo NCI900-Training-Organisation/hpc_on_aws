@@ -13,6 +13,7 @@
     spack_dir: /apps
     current_user: rocky
 
+
   tasks:
     
     # Clone the Spack repository into /apps/spack
@@ -21,9 +22,7 @@
         repo: "{{ git_repo }}"
         dest: "{{ app_dir }}/spack"
       become_user: root
-
-
-
+      tags: [spack, setup]
 
 
 # ---------------------------------------------------------
@@ -45,6 +44,7 @@
         owner: root
         group: root
         mode: '0644'
+      tags: [spack, env]
 
 
 # ---------------------------------------------------------
@@ -54,6 +54,7 @@
   hosts: ec2
   become: yes
   gather_facts: no
+  
 
   tasks:
 
@@ -61,3 +62,4 @@
       shell: /apps/spack/bin/spack --version
       register: spack_version
       changed_when: false
+      tags: [spack, env]

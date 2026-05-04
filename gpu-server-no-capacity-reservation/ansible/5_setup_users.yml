@@ -1,8 +1,8 @@
 ---
 # =========================================================
-# Play 1: Setup spackadmin group, users, and /apps access
+# Play 1: Setup groups, users, and /apps structure
 # =========================================================
-- name: Setup spackadmin group, users, and secure /apps
+- name: Setup spackadmin, cuda users, and filesystem
   hosts: all
   become: yes
   gather_facts: yes
@@ -49,7 +49,7 @@
         state: present
       tags: [users, spack]
 
-    - name: Ensure rocky is in spackadmin group
+    - name: Ensure current admin user is in spackadmin group
       user:
         name: "{{ current_user }}"
         groups: "{{ spack_group }}"
@@ -72,7 +72,7 @@
       tags: [users, cuda, bulk]
 
     # -----------------------------------------------------
-    # SUDO ACCESS (Spack admins only)
+    # SUDO ACCESS
     # -----------------------------------------------------
     - name: Grant passwordless sudo to spackadmin group
       copy:
@@ -84,18 +84,32 @@
       tags: [sudo, security]
 
     # -----------------------------------------------------
-    # /apps ACCESS MODEL (CRITICAL FIX)
+    # /apps BASE DIRECTORY
     # -----------------------------------------------------
-    - name: Ensure /apps directory exists with group control
+    - name: Ensure /apps exists with correct permissions
       file:
         path: "{{ spack_dir }}"
         state: directory
         owner: root
         group: "{{ spack_group }}"
         mode: "2775"
-      tags: [filesystem, spack, apps]
+      tags: [filesystem, apps, spack]
 
-    # Ensure spackuser is explicitly part of spackadmin
+    # -----------------------------------------------------
+    # python_venv DIRECTORY (IMPORTANT)
+    # -----------------------------------------------------
+    - name: Create python_venv directory
+      file:
+        path: "{{ spack_dir }}/python_venv"
+        state: directory
+        owner: root
+        group: "{{ spack_group }}"
+        mode: "2775"
+      tags: [filesystem, venv]
+
+    # -----------------------------------------------------
+    # ENSURE GROUP MEMBERSHIP CONSISTENCY
+    # -----------------------------------------------------
     - name: Ensure spackuser is in spackadmin group
       user:
         name: "{{ spack_user }}"
@@ -105,9 +119,9 @@
 
 
 # =========================================================
-# Play 2: Configure ACL permissions for cudauser on /apps
+# Play 2: ACL configuration
 # =========================================================
-- name: Configure ACL permissions for cudauser group
+- name: Configure ACL permissions
   hosts: all
   become: yes
   gather_facts: yes
@@ -128,9 +142,9 @@
       tags: [packages, acl]
 
     # -----------------------------------------------------
-    # CUDA ACCESS (read-only to Spack tree)
+    # /apps READ ACCESS FOR CUDA USERS
     # -----------------------------------------------------
-    - name: Grant read/execute access to cudauser on /apps
+    - name: Grant read/execute to cudauser on /apps
       acl:
         path: "{{ spack_dir }}"
         entity: "{{ cuda_group }}"
@@ -139,7 +153,7 @@
         state: present
       tags: [acl, cuda]
 
-    - name: Set default ACL for cudauser on /apps
+    - name: Set default ACL on /apps for cudauser
       acl:
         path: "{{ spack_dir }}"
         entity: "{{ cuda_group }}"
@@ -150,7 +164,29 @@
       tags: [acl, cuda, defaults]
 
     # -----------------------------------------------------
-    # REBOOT (optional - usually avoid in production)
+    # python_venv ACL (EXPLICIT CONTROL)
+    # -----------------------------------------------------
+    - name: Grant read/execute to cudauser on python_venv
+      acl:
+        path: "{{ spack_dir }}/python_venv"
+        entity: "{{ cuda_group }}"
+        etype: group
+        permissions: rx
+        state: present
+      tags: [acl, venv]
+
+    - name: Set default ACL on python_venv
+      acl:
+        path: "{{ spack_dir }}/python_venv"
+        entity: "{{ cuda_group }}"
+        etype: group
+        permissions: rx
+        default: yes
+        state: present
+      tags: [acl, venv, defaults]
+
+    # -----------------------------------------------------
+    # OPTIONAL REBOOT
     # -----------------------------------------------------
     - name: Reboot nodes
       reboot:

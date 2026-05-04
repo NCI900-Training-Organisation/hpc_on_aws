@@ -1,5 +1,5 @@
 ---
-- name: Install optimized math libraries via Spack
+- name: Install optimized math libraries via Spack 
   hosts: all
   become: yes
   gather_facts: yes
@@ -9,32 +9,66 @@
     spack_user: spackuser
 
     mkl_pkg: intel-oneapi-mkl
-    arm_pkg: openblas  # or blis
+    blas_pkg: openblas   # swap to blis if desired
 
   tasks:
 
-    # -----------------------------------------------------
-    # Detect architecture
-    # -----------------------------------------------------
+    # =====================================================
+    # DETECTION LAYER (architecture + CPU vendor)
+    # =====================================================
+
     - name: Set architecture type
       set_fact:
-        is_x86: "{{ ansible_facts['architecture'] == 'x86_64' }}"
+        is_x86: "{{ ansible_facts['architecture'] in ['x86_64', 'amd64'] }}"
         is_arm: "{{ ansible_facts['architecture'] in ['aarch64', 'arm64'] }}"
+      tags: [detect]
 
-    - name: Show architecture
+    - name: Detect CPU vendor from /proc/cpuinfo
+      shell: |
+        grep -m 1 "vendor_id" /proc/cpuinfo | awk '{print $3}'
+      register: cpu_vendor_raw
+      changed_when: false
+      tags: [detect]
+
+    - name: Set CPU vendor fact
+      set_fact:
+        cpu_vendor: "{{ cpu_vendor_raw.stdout | default('unknown') }}"
+      tags: [detect]
+
+    - name: Decide math library (final logic)
+      set_fact:
+        use_mkl: "{{ is_x86 and cpu_vendor == 'GenuineIntel' }}"
+        use_openblas: "{{ is_arm or cpu_vendor == 'AuthenticAMD' or cpu_vendor == 'unknown' }}"
+      tags: [detect]
+
+    - name: Show detection summary
       debug:
-        msg: "Architecture = {{ ansible_facts['architecture'] }}"
+        msg:
+          - "Architecture: {{ ansible_facts['architecture'] }}"
+          - "CPU Vendor: {{ cpu_vendor }}"
+          - "Use MKL: {{ use_mkl }}"
+          - "Use OpenBLAS: {{ use_openblas }}"
+      tags: [detect]
 
-    # -----------------------------------------------------
-    # Load Spack env once (reuse pattern)
-    # -----------------------------------------------------
+    # =====================================================
+    # SPACK SETUP
+    # =====================================================
+
     - name: Define Spack environment loader
       set_fact:
         spack_env: "source {{ spack_root }}/share/spack/setup-env.sh"
+      tags: [spack]
 
-    # -----------------------------------------------------
-    # Ensure compilers
-    # -----------------------------------------------------
+    - name: Warm up Spack
+      become_user: "{{ spack_user }}"
+      shell: |
+        {{ spack_env }}
+        spack list > /dev/null
+      args:
+        executable: /bin/bash
+      changed_when: false
+      tags: [spack]
+
     - name: Detect compilers
       become_user: "{{ spack_user }}"
       shell: |
@@ -43,60 +77,68 @@
       args:
         executable: /bin/bash
       changed_when: false
+      tags: [spack, compiler]
 
-    # -----------------------------------------------------
-    # INSTALL: x86 → MKL
-    # -----------------------------------------------------
-    - name: Check MKL
+    # =====================================================
+    # INTEL MKL PATH
+    # =====================================================
+
+    - name: Check MKL (safe)
       become_user: "{{ spack_user }}"
       shell: |
         {{ spack_env }}
-        spack find --format '{name}' {{ mkl_pkg }}
+        spack find --format '{name}' {{ mkl_pkg }} || true
       args:
         executable: /bin/bash
       register: mkl_check
       changed_when: false
-      when: is_x86
+      when: use_mkl
+      tags: [mkl, check]
 
-    - name: Install MKL (x86 only)
+    - name: Install MKL (Intel only)
       become_user: "{{ spack_user }}"
       shell: |
         {{ spack_env }}
-        spack install {{ mkl_pkg }} %gcc
+        spack install {{ mkl_pkg }} %gcc threads=openmp
       args:
         executable: /bin/bash
       when:
-        - is_x86
+        - use_mkl
         - mkl_check.stdout.strip() == ""
+      tags: [mkl, install]
 
-    # -----------------------------------------------------
-    # INSTALL: ARM → OpenBLAS (or BLIS)
-    # -----------------------------------------------------
-    - name: Check OpenBLAS
+    # =====================================================
+    # AMD / ARM PATH (OpenBLAS / BLIS)
+    # =====================================================
+
+    - name: Check BLAS
       become_user: "{{ spack_user }}"
       shell: |
         {{ spack_env }}
-        spack find --format '{name}' {{ arm_pkg }}
+        spack find --format '{name}' {{ blas_pkg }} || true
       args:
         executable: /bin/bash
       register: blas_check
       changed_when: false
-      when: is_arm
+      when: use_openblas
+      tags: [blas, check]
 
-    - name: Install OpenBLAS (ARM fallback)
+    - name: Install BLAS (OpenBLAS / BLIS)
       become_user: "{{ spack_user }}"
       shell: |
         {{ spack_env }}
-        spack install {{ arm_pkg }} %gcc
+        spack install {{ blas_pkg }} %gcc
       args:
         executable: /bin/bash
       when:
-        - is_arm
+        - use_openblas
         - blas_check.stdout.strip() == ""
+      tags: [blas, install]
 
-    # -----------------------------------------------------
-    # Modules refresh (common)
-    # -----------------------------------------------------
+    # =====================================================
+    # MODULE SYSTEM
+    # =====================================================
+
     - name: Refresh Spack modules
       become_user: "{{ spack_user }}"
       shell: |
@@ -104,21 +146,21 @@
         spack module tcl refresh -y
       args:
         executable: /bin/bash
+      tags: [modules]
 
-    # -----------------------------------------------------
-    # Dynamic module path (FIX your hardcoding issue)
-    # -----------------------------------------------------
     - name: Configure module path dynamically
       copy:
         dest: /etc/profile.d/spack-modules.sh
         mode: '0755'
         content: |
           export MODULEPATH={{ spack_root }}/share/spack/modules/linux-$(uname -m):$MODULEPATH
+      tags: [modules]
 
-    # -----------------------------------------------------
-    # Verification
-    # -----------------------------------------------------
-    - name: Verify install
+    # =====================================================
+    # VERIFICATION
+    # =====================================================
+
+    - name: Verify installation
       become_user: "{{ spack_user }}"
       shell: |
         {{ spack_env }}
@@ -127,6 +169,9 @@
         executable: /bin/bash
       register: verify
       changed_when: false
+      tags: [verify]
 
-    - debug:
+    - name: Show installed packages
+      debug:
         var: verify.stdout_lines
+      tags: [verify]

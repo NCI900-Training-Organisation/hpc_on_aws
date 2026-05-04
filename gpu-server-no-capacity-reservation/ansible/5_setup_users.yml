@@ -1,6 +1,6 @@
 ---
 # =========================================================
-# Play 1: Setup spackadmin group, user, and /apps access
+# Play 1: Setup spackadmin group, users, and /apps access
 # =========================================================
 - name: Setup spackadmin group, users, and secure /apps
   hosts: all
@@ -13,7 +13,7 @@
     spack_dir: /apps
     current_user: rocky
 
-    # CUDA user settings (kept here for shared context)
+    # CUDA user settings
     cuda_group: cudauser
     user_count: 40
     user_prefix: "user"
@@ -22,20 +22,22 @@
   tasks:
 
     # -----------------------------------------------------
-    # Group setup
+    # GROUPS
     # -----------------------------------------------------
     - name: Create spackadmin group
       group:
         name: "{{ spack_group }}"
         state: present
+      tags: [groups, spack]
 
     - name: Create cudauser group
       group:
         name: "{{ cuda_group }}"
         state: present
+      tags: [groups, cuda]
 
     # -----------------------------------------------------
-    # User setup
+    # USERS (Spack admins)
     # -----------------------------------------------------
     - name: Create spack user
       user:
@@ -45,13 +47,18 @@
         shell: /bin/bash
         create_home: yes
         state: present
+      tags: [users, spack]
 
-    - name: Add admin user to spack group
+    - name: Ensure rocky is in spackadmin group
       user:
         name: "{{ current_user }}"
         groups: "{{ spack_group }}"
         append: yes
+      tags: [users, spack, admin]
 
+    # -----------------------------------------------------
+    # CUDA USERS
+    # -----------------------------------------------------
     - name: Create CUDA users
       user:
         name: "{{ user_prefix }}{{ item }}"
@@ -62,9 +69,10 @@
         password: "{{ default_password | password_hash('sha512') }}"
         state: present
       loop: "{{ range(1, user_count + 1) | list }}"
+      tags: [users, cuda, bulk]
 
     # -----------------------------------------------------
-    # Sudo configuration
+    # SUDO ACCESS (Spack admins only)
     # -----------------------------------------------------
     - name: Grant passwordless sudo to spackadmin group
       copy:
@@ -73,17 +81,27 @@
         owner: root
         group: root
         mode: "0440"
+      tags: [sudo, security]
 
     # -----------------------------------------------------
-    # /apps permissions and ownership
+    # /apps ACCESS MODEL (CRITICAL FIX)
     # -----------------------------------------------------
-    - name: Ensure /apps directory exists
+    - name: Ensure /apps directory exists with group control
       file:
         path: "{{ spack_dir }}"
         state: directory
         owner: root
         group: "{{ spack_group }}"
-        mode: "2775"   # setgid + group writable
+        mode: "2775"
+      tags: [filesystem, spack, apps]
+
+    # Ensure spackuser is explicitly part of spackadmin
+    - name: Ensure spackuser is in spackadmin group
+      user:
+        name: "{{ spack_user }}"
+        groups: "{{ spack_group }}"
+        append: yes
+      tags: [users, spack, fix]
 
 
 # =========================================================
@@ -101,23 +119,25 @@
   tasks:
 
     # -----------------------------------------------------
-    # Install ACL utilities
+    # ACL PACKAGE
     # -----------------------------------------------------
     - name: Ensure ACL package is installed
       dnf:
         name: acl
         state: present
+      tags: [packages, acl]
 
     # -----------------------------------------------------
-    # Apply ACL permissions
+    # CUDA ACCESS (read-only to Spack tree)
     # -----------------------------------------------------
-    - name: Grant read/execute permissions to cudauser on /apps
+    - name: Grant read/execute access to cudauser on /apps
       acl:
         path: "{{ spack_dir }}"
         entity: "{{ cuda_group }}"
         etype: group
         permissions: rx
         state: present
+      tags: [acl, cuda]
 
     - name: Set default ACL for cudauser on /apps
       acl:
@@ -127,12 +147,13 @@
         permissions: rx
         default: yes
         state: present
+      tags: [acl, cuda, defaults]
 
     # -----------------------------------------------------
-    # Reboot
+    # REBOOT (optional - usually avoid in production)
     # -----------------------------------------------------
     - name: Reboot nodes
       reboot:
         reboot_timeout: 600
         test_command: whoami
-      tags: reboot
+      tags: [reboot]

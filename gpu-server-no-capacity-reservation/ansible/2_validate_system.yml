@@ -1,39 +1,84 @@
----
 # ---------------------------------------------------------
-# Play 1: Validate EC2 System Requirements
+# Playbook: Validate GPU + CPU + OS Requirements
 # ---------------------------------------------------------
 - name: Validate system requirements
-  hosts: ec2
+  hosts: all
   become: yes
   gather_facts: yes
 
   tasks:
-    # Ensure the operating system is Ubuntu 22.04
-    - name: Check OS is Ubuntu 22.04
-      fail:
-        msg: "This playbook only supports Ubuntu 22.04"
-      when: not (ansible_distribution == "Ubuntu" and ansible_distribution_version == "22.04")
 
-    # Check if the CPU vendor is Intel
-    - name: Check CPU is Intel
+    # -----------------------------------------------------
+    # OS CHECK (Rocky Linux 9.6)
+    # -----------------------------------------------------
+    - name: Check OS is Rocky Linux 9.6
+      fail:
+        msg: "This playbook only supports Rocky Linux 9.6"
+      when: not (
+        ansible_distribution == "Rocky" and
+        ansible_distribution_version is version("9.6", "=="))
+
+    # -----------------------------------------------------
+    # CPU CHECK (AMD or Intel supported)
+    # -----------------------------------------------------
+    - name: Detect CPU model
+      shell: cat /proc/cpuinfo | grep -m1 "model name"
+      register: cpu_model
+      changed_when: false
+
+    - name: Show CPU model
+      debug:
+        msg: "Detected CPU: {{ cpu_model.stdout }}"
+
+    - name: Validate CPU is AMD or Intel
       assert:
         that:
-          - "'GenuineIntel' in ansible_processor"
-        fail_msg: "This host is not using an Intel CPU"
+          - >
+            ('AMD' in cpu_model.stdout or
+             'Intel' in cpu_model.stdout or
+             'EPYC' in cpu_model.stdout or
+             'Xeon' in cpu_model.stdout)
+        fail_msg: "Unsupported CPU. Only AMD EPYC or Intel Xeon CPUs are supported."
 
-    # Ensure that an NVIDIA GPU is available
-    - name: Check NVIDIA GPU is present
+    # -----------------------------------------------------
+    # GPU CHECK (V100 or newer, PCI-based, no nvidia-smi)
+    # -----------------------------------------------------
+    - name: Detect NVIDIA GPU via PCI
       shell: lspci | grep -i nvidia
-      register: nvidia_gpu_check
+      register: gpu_pci
       changed_when: false
-      failed_when: nvidia_gpu_check.rc != 0
+      failed_when: gpu_pci.rc != 0
 
-    # Set a custom fact if all requirements are met
-    - name: Set system check fact
+    - name: Show detected GPU
+      debug:
+        msg: "{{ gpu_pci.stdout }}"
+
+    - name: Validate GPU is V100 or newer
+      set_fact:
+        gpu_supported: >-
+          {{
+            'V100' in gpu_pci.stdout or
+            'Tesla V100' in gpu_pci.stdout or
+            'T4' in gpu_pci.stdout or
+            'A10' in gpu_pci.stdout or
+            'A100' in gpu_pci.stdout or
+            'H100' in gpu_pci.stdout
+          }}
+
+    - name: Fail if GPU is not V100 or newer
+      fail:
+        msg: >
+          Unsupported GPU detected. Only V100 or newer NVIDIA GPUs are allowed.
+          Detected: {{ gpu_pci.stdout }}
+      when: not gpu_supported
+
+    # -----------------------------------------------------
+    # FINAL VALIDATION FLAG
+    # -----------------------------------------------------
+    - name: Set system validation fact
       set_fact:
         requirements_met: true
 
-    # Abort remaining tasks if any requirement is not met
-    - name: End play if requirements are not satisfied
+    - name: End play if validation failed
       meta: end_play
       when: requirements_met is not defined or not requirements_met

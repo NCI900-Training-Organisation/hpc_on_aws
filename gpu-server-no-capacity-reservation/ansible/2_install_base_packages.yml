@@ -115,6 +115,7 @@
           - which
           - bind-utils
           - pciutils
+          - xauth
         state: present
       tags: packages
 

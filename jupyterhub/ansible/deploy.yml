@@ -22,31 +22,38 @@
   tags: [drivers, gpu]
 
 # ---------------------------------------------------------
-# SSH configuration (password login etc.)
+#JupyterHub installation
 # ---------------------------------------------------------
-- import_playbook: 4_password_login.yml
-  tags: [ssh, auth]
+- import_playbook: 4_install_jupyterhub.yml
+  tags: [jupyterhub, notebook]
 
-# ---------------------------------------------------------
-# User + group setup
-# ---------------------------------------------------------
-- import_playbook: 5_setup_users.yml
-  tags: [users, accounts]
 
-# ---------------------------------------------------------
-# Spack installation
-# ---------------------------------------------------------
-- import_playbook: 6_install_spack.yml
-  tags: [spack, hpc]
-
-# ---------------------------------------------------------
-# CUDA toolkit
-# ---------------------------------------------------------
-- import_playbook: 7_install_cuda.yml
-  tags: [cuda, gpu]
-
-# ---------------------------------------------------------
-# Intel MKL
-# ---------------------------------------------------------
-- import_playbook: 8_install_mkl.yml
-  tags: [mkl, math]
+## ---------------------------------------------------------
+## SSH configuration (password login etc.)
+## ---------------------------------------------------------
+#- import_playbook: 4_password_login.yml
+#  tags: [ssh, auth]
+#
+## ---------------------------------------------------------
+## User + group setup
+## ---------------------------------------------------------
+#- import_playbook: 5_setup_users.yml
+#  tags: [users, accounts]
+#
+## ---------------------------------------------------------
+## Spack installation
+## ---------------------------------------------------------
+#- import_playbook: 6_install_spack.yml
+#  tags: [spack, hpc]
+#
+## ---------------------------------------------------------
+## CUDA toolkit
+## ---------------------------------------------------------
+#- import_playbook: 7_install_cuda.yml
+#  tags: [cuda, gpu]
+#
+## ---------------------------------------------------------
+## Intel MKL
+## ---------------------------------------------------------
+#- import_playbook: 8_install_mkl.yml
+#  tags: [mkl, math]

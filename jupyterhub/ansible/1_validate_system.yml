@@ -1,5 +1,5 @@
 # ---------------------------------------------------------
-# Playbook: Validate GPU + CPU + OS Requirements
+# Playbook: Validate GPU + CPU + OS Requirements (Ubuntu)
 # ---------------------------------------------------------
 - name: Validate system requirements
   hosts: all
@@ -9,20 +9,20 @@
   tasks:
 
     # -----------------------------------------------------
-    # OS CHECK (Rocky Linux 9.6)
+    # OS CHECK (Ubuntu 22.04 LTS)
     # -----------------------------------------------------
-    - name: Check OS is Rocky Linux 9.6
+    - name: Check OS is Ubuntu 22.04
       fail:
-        msg: "This playbook only supports Rocky Linux 9.6"
+        msg: "This playbook only supports Ubuntu 22.04 LTS"
       when: not (
-        ansible_distribution == "Rocky" and
-        ansible_distribution_version is version("9.6", "=="))
+        ansible_distribution == "Ubuntu" and
+        ansible_distribution_version is version("22.04", "=="))
 
     # -----------------------------------------------------
     # CPU CHECK (AMD or Intel supported)
     # -----------------------------------------------------
     - name: Detect CPU model
-      shell: cat /proc/cpuinfo | grep -m1 "model name"
+      shell: grep -m1 "model name" /proc/cpuinfo
       register: cpu_model
       changed_when: false
 
@@ -45,10 +45,10 @@
     # -----------------------------------------------------
 
     - name: Install pciutils for GPU detection
-      dnf:
-        name:
-          - pciutils
+      apt:
+        name: pciutils
         state: present
+        update_cache: yes
       tags: packages
 
     - name: Detect NVIDIA GPU via PCI

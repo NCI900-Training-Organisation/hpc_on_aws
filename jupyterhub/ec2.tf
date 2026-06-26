@@ -3,7 +3,7 @@
 # ---------------------------
 resource "aws_key_pair" "hcp_key" {
   # The name of the key pair to create in AWS
-  key_name = "terraform-user"
+  key_name = "terraform-user-jupyter"
 
   # The public key file to register with AWS
   # This file should exist at keys/terraform-user.pub relative to the module path
